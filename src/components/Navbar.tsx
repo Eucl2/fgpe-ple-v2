@@ -33,6 +33,7 @@ import { FocusActivityContext } from "../context/FocusActivityContext";
 import NavContext from "../context/NavContext";
 import LogoSVG from "../images/logo.svg";
 import ChangeLanguageModal from "./ChangeLanguageModal";
+import LogoutConfirmationModal from "./LogoutConfirmationModal";
 
 const Logo = styled.div`
   background: url(${LogoSVG});
@@ -61,6 +62,12 @@ const Navbar = () => {
     isOpen: isOpenLanguageModal,
     onOpen: onOpenLanguageModal,
     onClose: onCloseLanguageModal,
+  } = useDisclosure();
+
+  const {
+    isOpen: isOpenLogoutModal,
+    onOpen: onOpenLogoutModal,
+    onClose: onCloseLogoutModal,
   } = useDisclosure();
 
   const { t, i18n } = useTranslation();
@@ -105,6 +112,13 @@ const Navbar = () => {
         onOpen={onOpenLanguageModal}
         isOpen={isOpenLanguageModal}
       />
+      <LogoutConfirmationModal
+        isOpen={isOpenLogoutModal}
+        onClose={onCloseLogoutModal}
+        onConfirm={() => keycloak.logout({
+          redirectUri: `${window.location.origin}${process.env.PUBLIC_URL}/`,
+        })}
+      /> {}
       <NavbarStyled>
         <Flex
           px={2}
@@ -254,14 +268,7 @@ const Navbar = () => {
             {!focusActivity && (
               <Box marginLeft={5}>
                 {keycloak.authenticated ? (
-                  <button
-                    onClick={() =>
-                      keycloak.logout({
-                        redirectUri: `${window.location.origin}${process.env.PUBLIC_URL}/`,
-                      })
-                    }
-                    data-cy="logout"
-                  >
+                  <button onClick={onOpenLogoutModal} data-cy="logout">
                     {t("Logout")}
                   </button>
                 ) : (
