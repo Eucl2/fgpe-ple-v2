@@ -12,11 +12,11 @@ import {
 import styled from "@emotion/styled";
 import dayjs from "dayjs";
 import { motion } from "framer-motion";
-import { useContext, useState, useEffect } from "react";
+import { useContext, useState } from "react";
 import Countdown from "react-countdown";
 import { useTranslation } from "react-i18next";
 import { BiTimer } from "react-icons/bi";
-import { Redirect, useParams, useHistory } from "react-router-dom";
+import { Redirect, useParams } from "react-router-dom";
 import { FocusActivityContextType } from "../@types/focus-activity";
 import { FocusActivityContext } from "../context/FocusActivityContext";
 import { challengeStatusUpdatedStudentSub } from "../generated/challengeStatusUpdatedStudentSub";
@@ -49,31 +49,7 @@ interface ParamTypes {
   exerciseId?: string;
 }
 
-interface ExerciseData {
-  id: number;
-  version: number;
-  module: number;
-  order: number;
-  title: string;
-  description: string;
-  language: string;
-  programminglanguage: string;
-  initcode: string;
-  precode: string;
-  postcode: string;
-  testcode: string;
-  checksource: string;
-  hidden: boolean;
-  locked: boolean;
-  mode: string;
-  modeparameters: string;
-  difficulty: string;
-  createdat: string;
-  updatedat: string;
-}
-
 const Challenge = () => {
-  const history = useHistory();
   const [showExerciseNumbers, setShowExerciseNumbers] = useState(false);
   const { gameId, challengeId, exerciseId } = useParams<ParamTypes>();
   const { t } = useTranslation();
@@ -97,59 +73,6 @@ const Challenge = () => {
   const [hints, setHints] = useState<
     rewardReceivedStudentSubscription_rewardReceivedStudent_reward[]
   >([]);
-  const [fetchedExerciseData, setFetchedExerciseData] = useState<ExerciseData | null>(null);
-
-  const fetchExerciseData = async (exerciseId: string, playerId: string, gameId: string): Promise<void> => {
-    try {
-      const response = await fetch("/get_exercise_data", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          exercise_id: exerciseId,
-          player_id: playerId,
-          game_id: gameId,
-        }),
-      });
-      
-      const data = await response.json();
-      return data.data.exercise;
-    } catch (error) {
-      console.error("Error fetching exercise data:", error);
-      return null; // Return null to indicate an error
-    }
-  };
-
-  // Fetch exercise data when activeExercise changes
-  useEffect(() => {
-    if (activeExercise?.activity?.id) {
-      fetchExerciseData(
-        activeExercise.activity.id,
-        playerId, // how to get this playerID???
-        gameId
-      ).then((exerciseData) => {
-        if (exerciseData) {
-          setFetchedExerciseData(exerciseData);
-        }
-      });
-    }
-  }, [activeExercise?.activity?.id, gameId, playerId]);
-
-  useEffect(() => {
-    if (fetchedExerciseData) {
-      if (fetchedExerciseData.hidden || fetchedExerciseData.locked) {
-        alert("Exercise unavailable"); 
-        //add translations to enable internationalization
-        // addNotification({
-        //   status: "warning",
-        //   title: t("exercise.unavailable.title"),
-        //   description: t("exercise.unavailable.description"),
-        // });
-        history.goBack();
-      }
-    }
-  }, [fetchedExerciseData, history]);
 
   const { error: subUpdatedChallengeStatusError } =
     useSubscription<challengeStatusUpdatedStudentSub>(
@@ -228,18 +151,18 @@ const Challenge = () => {
       }
     );
 
-  // const {
-  //   data: activityData,
-  //   error: activityError,
-  //   loading: activityLoading,
-  // } = useQuery<getActivityById>(GET_ACTIVITY_BY_ID, {
-  //   skip: !activeExercise?.activity?.id,
-  //   variables: { gameId, activityId: activeExercise?.activity?.id },
-  //   fetchPolicy: "no-cache",
-  //   onCompleted: () => {
-  //     console.log("ACTIVITY READY");
-  //   },
-  // });
+  const {
+    data: activityData,
+    error: activityError,
+    loading: activityLoading,
+  } = useQuery<getActivityById>(GET_ACTIVITY_BY_ID, {
+    skip: !activeExercise?.activity?.id,
+    variables: { gameId, activityId: activeExercise?.activity?.id },
+    fetchPolicy: "no-cache",
+    onCompleted: () => {
+      console.log("ACTIVITY READY");
+    },
+  });
 
   const {
     data: challengeData,
@@ -388,7 +311,7 @@ const Challenge = () => {
 
   return (
     <Playground>
-      {(challengeLoading || !fetchedExerciseData) && <MainLoading />}
+      {(challengeLoading || activityLoading) && <MainLoading />}
 
       {!focusActivity && challengeData?.game.name && (
         <BreadcrumbComponent
@@ -551,13 +474,13 @@ const Challenge = () => {
               }}
               gameId={gameId}
               challengeId={challengeId}
-              activity={fetchedExerciseData || null}
+              activity={activityData?.activity || null}
               programmingLanguages={challengeData.programmingLanguages}
               challengeRefetch={challengeRefetch}
               solved={checkIfSolved(challengeData, activeExercise)}
               setNextUnsolvedExercise={setNextUnsolvedExercise}
               hints={hints}
-              isLoading={challengeLoading || !fetchedExerciseData }
+              isLoading={challengeLoading || activityLoading}
             />
           )}
         </Flex>
