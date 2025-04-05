@@ -16,6 +16,7 @@ import ReactMarkdown from "react-markdown";
 import { getActivityById_activity } from "../../generated/getActivityById";
 import ScrollbarWrapper from "../ScrollbarWrapper";
 import { SanitizeHTML } from "./SanitizeHTML";
+import { ExerciseData } from "./ExerciseData";
 
 const DOCTYPE_HTML_STRING = "<!doctype html>";
 
@@ -32,22 +33,24 @@ const STATEMENT_LANGUAGES_SPLIT_REGEX = new RegExp(
 const Statement = ({
   activity,
   gameId,
+  exerciseData,
 }: {
   activity: getActivityById_activity | null;
   gameId: string;
+  exerciseData?: ExerciseData | null;
 }) => {
   const { t, i18n } = useTranslation();
   const { colorMode } = useColorMode();
   const {
     statement: statementOrNoDescriptionMessage,
     renderAsHTML: singleLanguageStatementRenderAsHTML,
-  } = getStatement(activity, t);
+  } = getStatement(activity, t, exerciseData);
 
   return (
     <ScrollbarWrapper>
       <Flex
         maxHeight="calc(50vh - 67px)"
-        height={getStatementHeight(activity)}
+        height={getStatementHeight(activity, exerciseData)}
         overflowY={"auto"}
         borderBottom="1px solid rgba(0,0,0,0.1)"
         position="relative"
@@ -361,11 +364,19 @@ const MarkdownStyled = styled(Box)`
 
 export const getStatement = (
   activity: getActivityById_activity | null,
-  tFunction: TFunction
+  tFunction: TFunction,
+  exerciseData?: ExerciseData | null
 ): {
   statement: string;
   renderAsHTML: boolean;
 } => {
+  if (exerciseData && exerciseData.description) {
+    return {
+      statement: exerciseData.description,
+      renderAsHTML: false,
+    };
+  }
+
   if (!activity) {
     return { statement: tFunction("No description"), renderAsHTML: false };
   }
@@ -386,8 +397,13 @@ export const getStatement = (
 };
 
 export const getStatementLength = (
-  activity: getActivityById_activity | null
+  activity: getActivityById_activity | null,
+  exerciseData?: ExerciseData | null
 ) => {
+  if (exerciseData && exerciseData.description) {
+    return exerciseData.description.length;
+  }
+
   if (!activity) {
     return 0;
   }
@@ -400,13 +416,14 @@ export const getStatementLength = (
 };
 
 export const getStatementHeight = (
-  activity: getActivityById_activity | null
+  activity: getActivityById_activity | null,
+  exerciseData?: ExerciseData | null
 ) => {
   if (activity?.pdf) {
     return 150;
   }
 
-  const statementLength = getStatementLength(activity);
+  const statementLength = getStatementLength(activity, exerciseData);
 
   if (!statementLength) {
     return 150;
