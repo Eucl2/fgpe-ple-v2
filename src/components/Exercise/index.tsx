@@ -153,22 +153,25 @@ const Exercise = ({
       if (activity?.id) {
         setIsExerciseDataLoading(true);
         try {
-          const data = await get_exercise_data(activity.id, gameId, keycloak.profile?.username);
-          setExerciseData(data);
-          
-          // Initialize editor with initcode from exercise data
-          if (data && data.initcode) {
-            setCode(data.initcode);
+          //const data = await get_exercise_data(activity.id, gameId, keycloak.profile?.username);
+          //Use the commented line above once we can use real data !
+          const data = await get_exercise_data(1, 1, 1); 
+          if (data && (data.hidden || data.locked)) {
+            // Show a notification for unavailable exercise
+            addNotification({
+              title: "Exercise unavailable",
+              description: "This exercise is not available.",
+              status: "warning",
+            });
+            setExerciseData(null);
+          } else {
+            setExerciseData(data);
+            if (data && data.initcode) {
+              setCode(data.initcode);
+            }
           }
         } catch (error) {
           console.error("Error fetching exercise data:", error);
-          toast({
-            title: "Error",
-            description: "Could not fetch exercise data",
-            status: "error",
-            duration: 5000,
-            isClosable: true,
-          });
         } finally {
           setIsExerciseDataLoading(false);
         }
