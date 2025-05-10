@@ -8,6 +8,7 @@ import {
   TabPanels,
   Tabs,
   useColorMode,
+  Badge,
 } from "@chakra-ui/react";
 import styled from "@emotion/styled";
 import React from "react";
@@ -46,7 +47,30 @@ const Statement = ({
     renderAsHTML: singleLanguageStatementRenderAsHTML,
   } = getStatement(activity, t, exerciseData);
 
-  return (
+return (
+  <>
+    {exerciseData?.difficulty && (
+      <Box px={5} pt={3}>
+        <Badge
+          px={2}
+          py={1}
+          borderRadius="md"
+          backgroundColor={
+            exerciseData.difficulty.toLowerCase() === "easy" ? "green.100" :
+            exerciseData.difficulty.toLowerCase() === "medium" ? "yellow.100" : 
+            "red.100"
+          }
+          color={
+            exerciseData.difficulty.toLowerCase() === "easy" ? "green.800" :
+            exerciseData.difficulty.toLowerCase() === "medium" ? "yellow.800" : 
+            "red.800"
+          }
+          fontSize="md"
+        >
+          {exerciseData.difficulty}
+        </Badge>
+      </Box>
+    )}
     <ScrollbarWrapper>
       <Flex
         maxHeight="calc(50vh - 67px)"
@@ -223,7 +247,8 @@ const Statement = ({
         </MarkdownStyled>
       </Flex>
     </ScrollbarWrapper>
-  );
+  </>
+);
 };
 
 const MarkdownStyled = styled(Box)`
