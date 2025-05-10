@@ -12,7 +12,7 @@ import {
 import styled from "@emotion/styled";
 import dayjs from "dayjs";
 import { motion } from "framer-motion";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import Countdown from "react-countdown";
 import { useTranslation } from "react-i18next";
 import { BiTimer } from "react-icons/bi";
@@ -39,6 +39,7 @@ import withChangeAnimation from "../utilities/withChangeAnimation";
 import BreadcrumbComponent from "./BreadcrumbComponent";
 import Error from "./Error";
 import Exercise from "./Exercise";
+import { get_exercise_data, ExerciseData } from "./Exercise/ExerciseData";
 import MainLoading from "./MainLoading";
 import { useNotifications } from "./Notifications";
 import ScrollbarWrapper from "./ScrollbarWrapper";
@@ -73,6 +74,28 @@ const Challenge = () => {
   const [hints, setHints] = useState<
     rewardReceivedStudentSubscription_rewardReceivedStudent_reward[]
   >([]);
+  
+  // Store exercise data from API
+  const [exercisesData, setExercisesData] = useState<{[id: string]: ExerciseData | null}>({});
+
+  // Fetch exercise data
+  const fetchExerciseData = async (exerciseId: string) => {
+    try {
+      //const data = await get_exercise_data(exerciseId, gameId, focusActivity?.playerId || "anonymous"); // to change later
+      const data = await get_exercise_data(1,1,1); // hardcoded for testing
+
+      if (data) {
+        setExercisesData(prev => ({
+          ...prev,
+          [exerciseId]: data
+        }));
+      }
+      return data;
+    } catch (error) {
+      console.error("Error fetching exercise data:", error);
+      return null;
+    }
+  };
 
   const { error: subUpdatedChallengeStatusError } =
     useSubscription<challengeStatusUpdatedStudentSub>(
@@ -190,6 +213,17 @@ const Challenge = () => {
     },
   });
 
+  // Effect to fetch exercise data when challenge data is loaded
+  useEffect(() => {
+    if (challengeData && !challengeLoading) {
+      challengeData.myChallengeStatus.refs.forEach(exercise => {
+        if (exercise.activity?.id) {
+          fetchExerciseData(exercise.activity.id);
+        }
+      });
+    }
+  }, [challengeData, challengeLoading]);
+
   const checkIfSolved = (
     challengeData: FindChallenge,
     activeExercise: FindChallenge_myChallengeStatus_refs | null
@@ -211,58 +245,19 @@ const Challenge = () => {
     }
 
     return false;
-
-    // setChallengeStatus(challengeData.myChallengeStatus)
-
-    // setChallengeStatus({
-    //   startedAt: learningPath.startedAt,
-    //   endedAt: learningPath.endedAt,
-    //   openedAt: learningPath.openedAt,
-    // });
-
-    // // challengeData.profileInGame.learningPath.map((learningPath) => {
-    // //    learningPath.refs.forEach((ref) => {
-    // //     if (ref.activity?.id === exercise.id) {
-    // //       !challengeStatus &&
-    // //         setChallengeStatus({
-    // //           startedAt: learningPath.startedAt,
-    // //           endedAt: learningPath.endedAt,
-    // //           openedAt: learningPath.openedAt,
-    // //         });
-
-    // //       if (ref.solved) {
-    // //         solved = true;
-    // //       }
-    // //     }
-    // //   });
-    // // });
   };
 
   if (challengeError) {
     console.log("challengeError", challengeError);
   }
 
-  // useEffect(() => {
-
-  // }, [challengeLoading]);
-
   if (!gameId || !challengeId) {
     return <div>Game ID or Challenge ID not provided</div>;
   }
 
-  // if (challengeLoading) {
-  //   return (
-  //     <Stack>
-  //       <Skeleton>
-  //         <Playground>
-  //           <Flex h="100%" w="100%" />
-  //         </Playground>
-  //       </Skeleton>
-  //     </Stack>
-  //   );
-  // }
   console.log("CHALLENGE DATA", challengeData);
   console.log("CHALLENGE STATUS", challengeStatus);
+  
   /** Redirects to main course page if there are no more unsolved exercises. */
   const setNextUnsolvedExercise = () => {
     if (!challengeData) {
@@ -353,13 +348,10 @@ const Challenge = () => {
               left: sideMenuOpen ? "0%" : "-50%",
             }}
             width={{ base: "50%", md: 2 / 12 }}
-            // backgroundColor="white"
             maxWidth={{ base: "100%", md: 330 }}
-            // paddingTop={5}
             height="100%"
             overflowY="scroll"
             borderRight="1px solid rgba(0,0,0,0.1)"
-            // position="relative"
             className="better-scrollbar"
           >
             <Box
@@ -412,7 +404,6 @@ const Challenge = () => {
                 flexDirection="column"
                 alignItems="center"
                 w="100%"
-                // height="100%"
                 overflowY="hidden"
                 data-cy="exercises-list"
               >
@@ -420,8 +411,12 @@ const Challenge = () => {
                   challengeData &&
                   challengeData.myChallengeStatus.refs.map((exercise, i) => {
                     if (!exercise.activity) {
-                      return;
+                      return null;
                     }
+
+                    // Get exercise data from our API if available
+                    const apiExerciseData = exercise.activity.id ? exercisesData[exercise.activity.id] : null;
+                    const exerciseTitle = apiExerciseData?.title || exercise.activity.name;
 
                     if (exercise.activity.name && !showExerciseNumbers) {
                       if (isNaN(+exercise.activity.name.split(".")[0])) {
@@ -457,8 +452,8 @@ const Challenge = () => {
                           textOverflow="ellipsis"
                         >
                           {showExerciseNumbers
-                            ? `${i + 1}. ${exercise.activity.name}`
-                            : exercise.activity.name}
+                            ? `${i + 1}. ${exerciseTitle}`
+                            : exerciseTitle}
                         </Text>
                       </Button>
                     );
@@ -475,6 +470,7 @@ const Challenge = () => {
               gameId={gameId}
               challengeId={challengeId}
               activity={activityData?.activity || null}
+              exerciseData={activeExercise?.activity?.id ? exercisesData[activeExercise.activity.id] : null}
               programmingLanguages={challengeData.programmingLanguages}
               challengeRefetch={challengeRefetch}
               solved={checkIfSolved(challengeData, activeExercise)}

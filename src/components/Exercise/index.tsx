@@ -24,7 +24,7 @@ import Hints from "./Hints";
 import { SettingsContext } from "./SettingsContext";
 import Statement, { getStatementHeight } from "./Statement";
 import Terminal from "./Terminal";
-import { get_exercise_data, executeCheckSource, ExerciseData } from "./ExerciseData";
+import { executeCheckSource, ExerciseData } from "./ExerciseData";
 
 const isEditorKindSpotBug = (activity?: getActivityById_activity | null) => {
   if (!activity) {
@@ -74,6 +74,7 @@ const isSkulptEnabledLocalStorage = () => {
 const Exercise = ({
   gameId,
   activity,
+  exerciseData,
   programmingLanguages,
   challengeRefetch,
   solved,
@@ -87,6 +88,7 @@ const Exercise = ({
   setSideMenuOpen: () => void;
   gameId: string;
   activity: getActivityById_activity | null;
+  exerciseData: ExerciseData | null;
   programmingLanguages: FindChallenge_programmingLanguages[];
   challengeRefetch: (
     variables?: Partial<Record<string, any>> | undefined
@@ -100,7 +102,6 @@ const Exercise = ({
   const toast = useToast();
   const { t } = useTranslation();
 
-  const [exerciseData, setExerciseData] = useState<ExerciseData | null>(null);
   const [isExerciseDataLoading, setIsExerciseDataLoading] = useState(false);
 
   const [activeLanguage, setActiveLanguage] =
@@ -147,39 +148,15 @@ const Exercise = ({
   const stopExecution = useRef(false);
   const additionalOutputs = useRef<string[]>([]);
 
-  // Fetch exercise data when activity changes
   useEffect(() => {
-    const fetchExerciseData = async () => {
-      if (activity?.id) {
-        setIsExerciseDataLoading(true);
-        try {
-          //const data = await get_exercise_data(activity.id, gameId, keycloak.profile?.username);
-          //Use the commented line above once we can use real data !
-          const data = await get_exercise_data(1, 1, 1); 
-          if (data && (data.hidden || data.locked)) {
-            // Show a notification for unavailable exercise
-            addNotification({
-              title: "Exercise unavailable",
-              description: "This exercise is not available.",
-              status: "warning",
-            });
-            setExerciseData(null);
-          } else {
-            setExerciseData(data);
-            if (data && data.initcode) {
-              setCode(data.initcode);
-            }
-          }
-        } catch (error) {
-          console.error("Error fetching exercise data:", error);
-        } finally {
-          setIsExerciseDataLoading(false);
-        }
+    if (exerciseData) {
+      setIsExerciseDataLoading(false);
+      // Initialize editor with initcode
+      if (exerciseData.initcode) {
+        setCode(exerciseData.initcode);
       }
-    };
-
-    fetchExerciseData();
-  }, [activity, gameId]);
+    }
+  }, [exerciseData]);
 
   const reloadCode = () => {
     if (exerciseData) {
@@ -260,6 +237,16 @@ const Exercise = ({
     activeLanguageRef.current = activeLanguage;
     codeRef.current = code;
   });
+
+  useEffect(() => {
+    const maxTime = 120;
+    const timeoutID = setTimeout(() => {
+      if (isValidationFetchingRef.current || isEvaluationFetchingRef.current) {
+        setConnectionProblem(true);
+      }
+    }, 1000 * maxTime);
+    return () => clearInterval(timeoutID);
+  }, [isWaitingForEvaluationResult, isWaitingForValidationResult]);
 
   const getLastStateFromLocalStorage = (
     lastSubmissionFeedbackUnparsed: any
@@ -343,6 +330,7 @@ const Exercise = ({
 
   useEffect(() => {
     if (submissionResult === Result.ACCEPT) {
+      // If solved successfully, update challenge status
       challengeRefetch();
     }
   }, [submissionResult]);
@@ -375,7 +363,6 @@ const Exercise = ({
     }
   };
 
-  // In-browser evaluation function (replacing server-side evaluation)
   const evaluateSubmission = async (isSpotBugMode?: boolean) => {
     clearPlayground();
     
@@ -421,8 +408,9 @@ const Exercise = ({
       const fullCode = `${exerciseData.precode}\n\n${code}\n\n${exerciseData.postcode}`;
       additionalOutputs.current = [];
       
+      // Use different execution based on language
       if (activeLanguage.name?.substring(0, 6).toLowerCase() === "python" && isSkulptEnabled) {
-    
+        // Python with Skulpt
         let errors: { content: string; index: number }[] = [];
         
         await new Promise((resolve) => {
@@ -439,6 +427,7 @@ const Exercise = ({
             getInput: () => undefined,
             onFinish: () => {},
             onSuccess: () => {
+              // Run tests after successful execution
               runPython({
                 code: `${fullCode}\n\n${exerciseData.testcode}`,
                 setLoading: setWaitingForEvaluationResult,
@@ -446,6 +435,8 @@ const Exercise = ({
                   additionalOutputs.current = [...additionalOutputs.current, v];
                 },
                 setResult: (v: Result) => {
+                  // If we got here, the code executed without runtime errors
+                  // Tests will determine the final result
                   setSubmissionResult(Result.ACCEPT);
                 },
                 stopExecution,
@@ -629,7 +620,7 @@ const Exercise = ({
     }
   };
 
-  const restoreLatestSubmissionOrValidation = () => {
+    const restoreLatestSubmissionOrValidation = () => {
     getAndSetLatestStateFromLocalStorageOrClear();
   };
 
