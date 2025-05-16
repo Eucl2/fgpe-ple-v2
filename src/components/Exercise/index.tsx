@@ -1,3 +1,4 @@
+import { processGameEvent, loadWasmModule } from './wasm-service';
 import {
   ApolloQueryResult,
 } from "@apollo/client";
@@ -147,6 +148,13 @@ const Exercise = ({
   // Added to use with local code interpreters like Skulpt (Python)
   const stopExecution = useRef(false);
   const additionalOutputs = useRef<string[]>([]);
+
+  useEffect(() => {
+    // %Load WASM module
+    loadWasmModule().catch(err => {
+      console.error("Failed to load WASM module:", err);
+    });
+  }, []);
 
   useEffect(() => {
     if (exerciseData) {
@@ -363,135 +371,166 @@ const Exercise = ({
     }
   };
 
-  const evaluateSubmission = async (isSpotBugMode?: boolean) => {
-    clearPlayground();
+const evaluateSubmission = async (isSpotBugMode?: boolean) => {
+  clearPlayground();
+  
+  if (!exerciseData) {
+    addNotification({
+      title: t("error.unknownProblem.title"),
+      description: "Exercise data not available",
+      status: "error",
+    });
+    return;
+  }
+  
+  if (!code) {
+    addNotification({
+      title: "No Code",
+      description: "Please write some code before submitting",
+      status: "warning",
+    });
+    return;
+  }
+  
+  setWaitingForEvaluationResult(true);
+  
+  try {
+    // 1. run checksource to verify if solution meets requirements
+    const checksourceResult = await executeCheckSource(code, exerciseData.checksource);
     
-    if (!exerciseData) {
-      addNotification({
-        title: t("error.unknownProblem.title"),
-        description: "Exercise data not available",
-        status: "error",
-      });
-      return;
-    }
-    
-    if (!code) {
-      addNotification({
-        title: "No Code",
-        description: "Please write some code before submitting",
-        status: "warning",
-      });
-      return;
-    }
-    
-    setWaitingForEvaluationResult(true);
-    
-    try {
-      // 1. run checksource to verify if solution meets requirements
-      const checksourceResult = await executeCheckSource(code, exerciseData.checksource);
-      
-      if (checksourceResult !== 'OK') {
-        setSubmissionFeedback(checksourceResult);
-        setSubmissionResult(Result.COMPILATION_ERROR);
-        setWaitingForEvaluationResult(false);
-        
-        saveSubmissionDataInLocalStorage(
-          checksourceResult,
-          Result.COMPILATION_ERROR,
-          false,
-          null
-        );
-        return;
-      }
-      
-      // 2. Run test code
-      const fullCode = `${exerciseData.precode}\n\n${code}\n\n${exerciseData.postcode}`;
-      additionalOutputs.current = [];
-      
-      // Use different execution based on language
-      if (activeLanguage.name?.substring(0, 6).toLowerCase() === "python" && isSkulptEnabled) {
-        // Python with Skulpt
-        let errors: { content: string; index: number }[] = [];
-        
-        await new Promise((resolve) => {
-          runPython({
-            code: fullCode,
-            setLoading: setWaitingForEvaluationResult,
-            setOutput: (v: string) => {
-              additionalOutputs.current = [...additionalOutputs.current, v];
-            },
-            setResult: (v: Result) => {
-              setSubmissionResult(v);
-            },
-            stopExecution,
-            getInput: () => undefined,
-            onFinish: () => {},
-            onSuccess: () => {
-              // Run tests after successful execution
-              runPython({
-                code: `${fullCode}\n\n${exerciseData.testcode}`,
-                setLoading: setWaitingForEvaluationResult,
-                setOutput: (v: string) => {
-                  additionalOutputs.current = [...additionalOutputs.current, v];
-                },
-                setResult: (v: Result) => {
-                  // If we got here, the code executed without runtime errors
-                  // Tests will determine the final result
-                  setSubmissionResult(Result.ACCEPT);
-                },
-                stopExecution,
-                getInput: () => undefined,
-                onFinish: () => {},
-                onSuccess: () => {
-                  setSubmissionResult(Result.ACCEPT);
-                  setSubmissionFeedback("All tests passed!");
-                  setValidationOutputs(additionalOutputs.current);
-                  resolve(true);
-                },
-                onError: (err: string) => {
-                  // Tsst failed
-                  setSubmissionResult(Result.WRONG_ANSWER);
-                  setSubmissionFeedback(err);
-                  setValidationOutputs(additionalOutputs.current);
-                  resolve(true);
-                }
-              });
-            },
-            onError: (err: string) => {
-              errors.push({
-                content: err,
-                index: 0,
-              });
-              
-              setSubmissionFeedback(err);
-              setSubmissionResult(Result.RUNTIME_ERROR);
-              setValidationOutputs(additionalOutputs.current);
-              resolve(true);
-            },
-          });
-        });
-      } else {
-        // For non-Python languages or when skulpt is disabled
-        setSubmissionFeedback("This language is not supported for in-browser execution yet");
-        setSubmissionResult(Result.WRONG_ANSWER);
-        setValidationOutputs(["Language not supported for in-browser execution"]);
-      }
+    if (checksourceResult !== 'OK') {
+      setSubmissionFeedback(checksourceResult);
+      setSubmissionResult(Result.COMPILATION_ERROR);
+      setWaitingForEvaluationResult(false);
       
       saveSubmissionDataInLocalStorage(
-        submissionFeedback,
-        submissionResult,
+        checksourceResult,
+        Result.COMPILATION_ERROR,
         false,
-        validationOutputs
+        null
       );
-      
-    } catch (error) {
-      console.error("Error during evaluation:", error);
-      setSubmissionFeedback("An error occurred during evaluation");
-      setSubmissionResult(Result.RUNTIME_ERROR);
-    } finally {
-      setWaitingForEvaluationResult(false);
+      return;
     }
-  };
+    
+    // 2. Run test code
+    const fullCode = `${exerciseData.precode}\n\n${code}\n\n${exerciseData.postcode}`;
+    additionalOutputs.current = [];
+    
+    // Use different execution based on language
+    if (activeLanguage.name?.substring(0, 6).toLowerCase() === "python" && isSkulptEnabled) {
+      // Python with Skulpt
+      let errors: { content: string; index: number }[] = [];
+      
+      await new Promise((resolve) => {
+        runPython({
+          code: fullCode,
+          setLoading: setWaitingForEvaluationResult,
+          setOutput: (v: string) => {
+            additionalOutputs.current = [...additionalOutputs.current, v];
+          },
+          setResult: (v: Result) => {
+            setSubmissionResult(v);
+          },
+          stopExecution,
+          getInput: () => undefined,
+          onFinish: () => {},
+          onSuccess: () => {
+            // Run tests after successful execution
+            runPython({
+              code: `${fullCode}\n\n${exerciseData.testcode}`,
+              setLoading: setWaitingForEvaluationResult,
+              setOutput: (v: string) => {
+                additionalOutputs.current = [...additionalOutputs.current, v];
+              },
+              setResult: (v: Result) => {
+                // If we got here, the code executed without runtime errors
+                // Tests will determine the final result
+                setSubmissionResult(Result.ACCEPT);
+              },
+              stopExecution,
+              getInput: () => undefined,
+              onFinish: () => {},
+              onSuccess: () => {
+                setSubmissionResult(Result.ACCEPT);
+                setSubmissionFeedback("All tests passed!");
+                setValidationOutputs(additionalOutputs.current);
+                resolve(true);
+              },
+              onError: (err: string) => {
+                // Tsst failed
+                setSubmissionResult(Result.WRONG_ANSWER);
+                setSubmissionFeedback(err);
+                setValidationOutputs(additionalOutputs.current);
+                resolve(true);
+              }
+            });
+          },
+          onError: (err: string) => {
+            errors.push({
+              content: err,
+              index: 0,
+            });
+            
+            setSubmissionFeedback(err);
+            setSubmissionResult(Result.RUNTIME_ERROR);
+            setValidationOutputs(additionalOutputs.current);
+            resolve(true);
+          },
+        });
+      });
+    } else {
+      // For non-Python languages or when skulpt is disabled
+      setSubmissionFeedback("This language is not supported for in-browser execution yet");
+      setSubmissionResult(Result.WRONG_ANSWER);
+      setValidationOutputs(["Language not supported for in-browser execution"]);
+    }
+    
+    saveSubmissionDataInLocalStorage(
+      submissionFeedback,
+      submissionResult,
+      false,
+      validationOutputs
+    );
+    
+    if (submissionResult === Result.ACCEPT) {
+      try {
+        // Create event data for WASM
+        const eventData = {
+          eventType: "submit",
+          eventResult: 100, // 100 for successful submission
+          playerId: Number(keycloak.profile?.id || "1"),
+          exerciseId: Number(activity?.id || "1"),
+          gameId: Number(gameId || "1")
+        };
+        
+        console.log("Sending event to WASM:", eventData);
+        
+        const gameResult = await processGameEvent(eventData);
+        
+        if (gameResult && gameResult.results) {
+          gameResult.results.forEach((result: any) => {
+            if (result[0] === "Message") {
+              addNotification({
+                title: "Achievement",
+                description: result[1][0],
+                status: "success",
+              });
+            }
+          });
+        }
+      } catch (wasmError) {
+        console.error("WASM processing error:", wasmError);
+      }
+    }
+    
+  } catch (error) {
+    console.error("Error during evaluation:", error);
+    setSubmissionFeedback("An error occurred during evaluation");
+    setSubmissionResult(Result.RUNTIME_ERROR);
+  } finally {
+    setWaitingForEvaluationResult(false);
+  }
+};
 
   const validateSubmission = async () => {
     clearPlayground(true);

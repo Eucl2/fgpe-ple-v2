@@ -1,0 +1,15 @@
+{
+  "name": "browser",
+  "type": "module",
+  "version": "0.1.0",
+  "files": [
+    "browser_bg.wasm",
+    "browser.js",
+    "browser.d.ts"
+  ],
+  "main": "browser.js",
+  "types": "browser.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}
