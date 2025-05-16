@@ -467,15 +467,31 @@ const evaluateSubmission = async (isSpotBugMode?: boolean) => {
                   console.log("Sending event to WASM:", eventData);
                   
                   processGameEvent(eventData).then(gameResult => {
-                    if (gameResult && gameResult.results) {
+                    console.log("Processing WASM gameResult:", gameResult);
+                    
+                    let notificationShown = false;
+                    
+                    if (gameResult && gameResult.results && Array.isArray(gameResult.results) && gameResult.results.length > 0) {
                       gameResult.results.forEach((result: any) => {
-                        if (result[0] === "Message") {
-                          addNotification({
-                            title: "Achievement",
-                            description: result[1][0],
-                            status: "success",
-                          });
+                        if (Array.isArray(result) && result.length >= 2 && result[0] === "Message") {
+                          if (Array.isArray(result[1]) && result[1].length > 0) {
+                            addNotification({
+                              title: "Achievement",
+                              description: result[1][0],
+                              status: "success",
+                            });
+                            notificationShown = true;
+                          }
                         }
+                      });
+                    }
+                    
+                    // If no notification shown but game state was updated, show a fallback notification
+                    if (!notificationShown && gameResult && gameResult.game_state) {
+                      addNotification({
+                        title: "Solution Accepted",
+                        description: "Solution has been recorded successfully.",
+                        status: "success",
                       });
                     }
                   }).catch(wasmError => {
