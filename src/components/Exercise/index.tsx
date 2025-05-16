@@ -444,7 +444,7 @@ const evaluateSubmission = async (isSpotBugMode?: boolean) => {
               },
               setResult: (v: Result) => {
                 // If we got here, the code executed without runtime errors
-                // Tests will determine the final result
+                
                 setSubmissionResult(Result.ACCEPT);
               },
               stopExecution,
@@ -454,6 +454,37 @@ const evaluateSubmission = async (isSpotBugMode?: boolean) => {
                 setSubmissionResult(Result.ACCEPT);
                 setSubmissionFeedback("All tests passed!");
                 setValidationOutputs(additionalOutputs.current);
+                
+                try {
+                  const eventData = {
+                    eventType: "submit",
+                    eventResult: 100,
+                    playerId: Number(keycloak.profile?.id || "1"),
+                    exerciseId: Number(activity?.id || "1"),
+                    gameId: Number(gameId || "1")
+                  };
+                  
+                  console.log("Sending event to WASM:", eventData);
+                  
+                  processGameEvent(eventData).then(gameResult => {
+                    if (gameResult && gameResult.results) {
+                      gameResult.results.forEach((result: any) => {
+                        if (result[0] === "Message") {
+                          addNotification({
+                            title: "Achievement",
+                            description: result[1][0],
+                            status: "success",
+                          });
+                        }
+                      });
+                    }
+                  }).catch(wasmError => {
+                    console.error("WASM processing error:", wasmError);
+                  });
+                } catch (wasmError) {
+                  console.error("WASM processing error:", wasmError);
+                }
+                
                 resolve(true);
               },
               onError: (err: string) => {
@@ -490,39 +521,7 @@ const evaluateSubmission = async (isSpotBugMode?: boolean) => {
       submissionResult,
       false,
       validationOutputs
-    );
-    
-    if (submissionResult === Result.ACCEPT) {
-      try {
-        // Create event data for WASM
-        const eventData = {
-          eventType: "submit",
-          eventResult: 100, // 100 for successful submission
-          playerId: Number(keycloak.profile?.id || "1"),
-          exerciseId: Number(activity?.id || "1"),
-          gameId: Number(gameId || "1")
-        };
-        
-        console.log("Sending event to WASM:", eventData);
-        
-        const gameResult = await processGameEvent(eventData);
-        
-        if (gameResult && gameResult.results) {
-          gameResult.results.forEach((result: any) => {
-            if (result[0] === "Message") {
-              addNotification({
-                title: "Achievement",
-                description: result[1][0],
-                status: "success",
-              });
-            }
-          });
-        }
-      } catch (wasmError) {
-        console.error("WASM processing error:", wasmError);
-      }
-    }
-    
+    );    
   } catch (error) {
     console.error("Error during evaluation:", error);
     setSubmissionFeedback("An error occurred during evaluation");
@@ -531,7 +530,6 @@ const evaluateSubmission = async (isSpotBugMode?: boolean) => {
     setWaitingForEvaluationResult(false);
   }
 };
-
   const validateSubmission = async () => {
     clearPlayground(true);
     
