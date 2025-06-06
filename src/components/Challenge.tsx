@@ -260,22 +260,52 @@ const Challenge = () => {
   
   /** Redirects to main course page if there are no more unsolved exercises. */
   const setNextUnsolvedExercise = () => {
-    if (!challengeData) {
+    if (!challengeData || !activeExercise) {
+      console.log("No challengeData or activeExercise available");
       return;
     }
 
-    let foundUnsolvedExercise = false;
-
     const refs = challengeData?.myChallengeStatus.refs;
-    for (let i = 0; i < refs.length; i++) {
+    
+    console.log("All Exercises:");
+    refs.forEach((ref, index) => {
+      const isCurrent = ref.activity?.id === activeExercise.activity?.id;
+      console.log(`  ${index}: ${ref.activity?.name || ref.activity?.id} - ${ref.solved ? 'SOLVED' : 'UNSOLVED'}${isCurrent ? ' CURRENT' : ''}`);
+    });
+    
+    // Find current
+    const currentIndex = refs.findIndex(ref => 
+      ref.activity?.id === activeExercise.activity?.id
+    );
+    
+    let foundUnsolvedExercise = false;
+    let nextExercise = null;
+
+    // First search forward from current position + 1
+    for (let i = currentIndex + 1; i < refs.length; i++) {
       if (!refs[i].solved) {
         foundUnsolvedExercise = true;
-        setActiveExercise(refs[i]);
+        nextExercise = refs[i];
         break;
       }
     }
 
+    // If not found, wrap around and search from beginning
     if (!foundUnsolvedExercise) {
+      for (let i = 0; i < currentIndex; i++) {
+        if (!refs[i].solved) {
+          foundUnsolvedExercise = true;
+          nextExercise = refs[i];
+          break;
+        }
+      }
+    }
+
+    if (foundUnsolvedExercise && nextExercise) {
+      console.log(`Setting active exercise to: ${nextExercise.activity?.name}`);
+      setActiveExercise(nextExercise);
+    } else {
+      console.log("All exercises are solved - redirecting to main course page");
       setShouldRedirect(true);
     }
   };
