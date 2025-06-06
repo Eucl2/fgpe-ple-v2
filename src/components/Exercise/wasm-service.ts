@@ -87,7 +87,7 @@ export async function processGameEvent(eventData: {
       game_state: currentGameState,
       simple_rules_str: "simple_rule: player 1 on 2020.01.01..2026.01.01 at 8:30..23:30 achieving 100 repeat +",
       compound_rules_str: "",
-      rule_results_str: "simple_rule -> msg nicely_done_simple_rule"
+      rule_results_str: "simple_rule -> repeat msg nicely_done_simple_rule"
     };
     
     console.log("Sending to WASM:", JSON.stringify(wasmEvent));

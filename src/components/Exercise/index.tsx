@@ -16,6 +16,7 @@ import { getActivityById_activity } from "../../generated/getActivityById";
 import { Result } from "../../generated/globalTypes";
 import { rewardReceivedStudentSubscription_rewardReceivedStudent_reward } from "../../generated/rewardReceivedStudentSubscription";
 import { decryptWithAES, encryptWithAES } from "../../utilities/Encryption";
+import { stringToNumber } from '../../utilities/StringUtils';
 import { useNotifications } from "../Notifications";
 import EditorMenu from "./EditorMenu";
 import { getDefaultProgrammingLangOrFirstFromArray } from "./helpers/defaultProgrammingLanguage";
@@ -456,12 +457,20 @@ const evaluateSubmission = async (isSpotBugMode?: boolean) => {
                 setValidationOutputs(additionalOutputs.current);
                 
                 try {
-                  const eventData = {
-                    eventType: "submit",
-                    eventResult: 100,
+                  console.log("Debug - keycloak.profile:", keycloak.profile);
+                  console.log("Debug - activity?.id:", activity?.id);
+                  console.log("Debug - gameId:", gameId);
+                  console.log("Debug - Numbers:", {
                     playerId: Number(keycloak.profile?.id || "1"),
                     exerciseId: Number(activity?.id || "1"),
                     gameId: Number(gameId || "1")
+                  });
+                  const eventData = {
+                    eventType: "submit",
+                    eventResult: 100,
+                    playerId: stringToNumber(keycloak.profile?.id || "1"),
+                    exerciseId: stringToNumber(activity?.id || "1"),
+                    gameId: stringToNumber(gameId || "1")
                   };
                   
                   console.log("Sending event to WASM:", eventData);
