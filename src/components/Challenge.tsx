@@ -270,7 +270,10 @@ const Challenge = () => {
     console.log("All Exercises:");
     refs.forEach((ref, index) => {
       const isCurrent = ref.activity?.id === activeExercise.activity?.id;
-      console.log(`  ${index}: ${ref.activity?.name || ref.activity?.id} - ${ref.solved ? 'SOLVED' : 'UNSOLVED'}${isCurrent ? ' CURRENT' : ''}`);
+      
+      const apiExerciseData = ref.activity?.id ? exercisesData[ref.activity.id] : null;
+      const exerciseTitle = apiExerciseData?.title || ref.activity?.name;
+      console.log(`  ${index}: ${exerciseTitle} - ${ref.solved ? 'SOLVED' : 'UNSOLVED'}${isCurrent ? ' CURRENT' : ''}`);
     });
     
     // Find current
@@ -302,7 +305,9 @@ const Challenge = () => {
     }
 
     if (foundUnsolvedExercise && nextExercise) {
-      console.log(`Setting active exercise to: ${nextExercise.activity?.name}`);
+      const nextApiExerciseData = nextExercise.activity?.id ? exercisesData[nextExercise.activity.id] : null;
+      const nextExerciseTitle = nextApiExerciseData?.title || nextExercise.activity?.name;
+      console.log(`Setting active exercise to: ${nextExerciseTitle}`);
       setActiveExercise(nextExercise);
     } else {
       console.log("All exercises are solved - redirecting to main course page");
