@@ -3,7 +3,7 @@ import styled from "@emotion/styled";
 import { AnimatePresence, motion } from "framer-motion";
 import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import Pagination from "react-js-pagination";
+import ReactPaginate from "react-paginate";
 import { useFilters, usePagination, useTable } from "react-table";
 import ScrollbarWrapper from "../ScrollbarWrapper";
 
@@ -75,15 +75,26 @@ const TableComponent = ({
         </Table>
       </Box>
       <PaginationStyled>
-        <Pagination
-          activePage={pageIndex + 1}
-          itemsCountPerPage={pageSize}
-          totalItemsCount={data.length}
+        <ReactPaginate
+          pageCount={Math.ceil(data.length / pageSize)}
           pageRangeDisplayed={5}
-          onChange={(pageNumber: number) => {
-            gotoPage(pageNumber - 1);
+          marginPagesDisplayed={2}
+          forcePage={pageIndex}
+          onPageChange={({ selected }) => {
+            gotoPage(selected);
           }}
+          containerClassName="pagination"
+          activeClassName="active"
+          previousLabel="←"
+          nextLabel="→"
+          breakLabel="..."
+          pageClassName="page-item"
+          pageLinkClassName="page-link"
+          previousClassName="page-item"
+          nextClassName="page-item"
+          disabledClassName="disabled"
         />
+
       </PaginationStyled>
     </ScrollbarWrapper>
   );

@@ -21,7 +21,7 @@ import {
   TiArrowSortedUp,
   TiArrowUnsorted,
 } from "react-icons/ti";
-import ReactPaginate from "react-paginate";
+import Pagination from "react-js-pagination";
 import {
   useFilters,
   usePagination,
@@ -387,27 +387,16 @@ const TableComponent: React.FC<TableComponentProps> = ({
         selectedFlatRows: selectedFlatRows.map((row) => row.original),
       })} */}
         <PaginationStyled data-cy="pagination-wrapper">
-          <ReactPaginate
-            pageCount={Math.ceil(data.length / pageSize)}
+          <Pagination
+            activePage={pageIndex + 1}
+            itemsCountPerPage={pageSize}
+            totalItemsCount={data.length}
             pageRangeDisplayed={5}
-            marginPagesDisplayed={2}
-            forcePage={pageIndex}
-            onPageChange={({ selected }) => {
-              gotoPage(selected);
+            onChange={(pageNumber: number) => {
+              gotoPage(pageNumber - 1);
             }}
-            containerClassName="pagination"
-            activeClassName="active"
-            previousLabel="←"
-            nextLabel="→"
-            breakLabel="..."
-            pageClassName="page-item"
-            pageLinkClassName="page-link"
-            previousClassName="page-item"
-            nextClassName="page-item"
-            disabledClassName="disabled"
           />
         </PaginationStyled>
-
       </ScrollbarWrapper>
     </>
   );
