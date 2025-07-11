@@ -4,6 +4,7 @@ import {
   InMemoryCache,
   split,
 } from "@apollo/client";
+import './polyfills';
 import { setContext } from "@apollo/client/link/context";
 import { WebSocketLink } from "@apollo/client/link/ws";
 import { getMainDefinition } from "@apollo/client/utilities";
@@ -80,7 +81,7 @@ const httpLink = createUploadLink({
 const authLink = setContext((_, { headers }) => {
   const token = keycloak.token;
   if (keycloak.isTokenExpired()) {
-    keycloak
+    return keycloak
       .updateToken(1)
       .then(function (refreshed: boolean) {
         if (refreshed) {
@@ -97,6 +98,12 @@ const authLink = setContext((_, { headers }) => {
       })
       .catch(function () {
         console.log("Failed to refresh the token, or the session has expired");
+        return {
+          headers: {
+            ...headers,
+            Authorization: "",
+          },
+        };
       });
   } else {
     return {
@@ -129,6 +136,14 @@ persistCache({
   const client = new ApolloClient({
     link: splitLink,
     cache: cache,
+    defaultOptions: {
+      watchQuery: {
+        errorPolicy: 'all',
+      },
+      query: {
+        errorPolicy: 'all',
+      },
+    },
   });
 
   keycloak.onTokenExpired = () => {

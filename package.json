@@ -50,7 +50,7 @@
     "react-markdown": "^5.0.3",
     "react-rewards": "^1.1.2",
     "react-router-dom": "^5.2.0",
-    "react-scripts": "4.0.1",
+    "react-scripts": "^5.0.1",
     "react-simple-code-editor": "^0.11.0",
     "react-syntax-highlighter": "^15.4.3",
     "react-table": "^7.6.3",
@@ -117,7 +117,8 @@
     "@types/react-table": "^7.0.29",
     "@types/sanitize-html": "^2.6.2",
     "@types/uuid": "^8.3.0",
-    "apollo": "^2.32.0"
+    "apollo": "^2.32.0",
+    "buffer": "^6.0.3"
   },
   "homepage": "/learning-platform/"
 }

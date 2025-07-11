@@ -96,7 +96,12 @@ const Navbar = () => {
   const [userProfile, setUserProfile] = useState<null | KeycloakProfile>(null);
 
   const loadUserProfile = async () => {
-    setUserProfile(await keycloak.loadUserProfile());
+    try {
+      setUserProfile(await keycloak.loadUserProfile());
+    } catch (error) {
+      console.warn('Failed to load user profile:', error);
+      setUserProfile(null); // type error fixing
+    }
   };
 
   useEffect(() => {
