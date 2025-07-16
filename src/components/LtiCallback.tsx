@@ -30,7 +30,21 @@ const LtiCallback = () => {
         }
       );
 
-      keycloak.manualLogin(res.data.accessToken, res.data.refreshToken, res.data.idToken, (time + new Date().getTime())/2);
+      keycloak.token = res.data.accessToken;
+      keycloak.refreshToken = res.data.refreshToken;
+      keycloak.idToken = res.data.idToken;
+      keycloak.timeSkew = 0; // Reset time skew
+
+      if (keycloak.token) {
+        try {
+          const payload = JSON.parse(atob(keycloak.token.split('.')[1]));
+          keycloak.tokenParsed = payload;
+          keycloak.subject = payload.sub;
+          keycloak.sessionId = payload.session_state;
+        } catch (e) {
+          console.error('Error parsing token:', e);
+        }
+      }
 
       if (gameId && challengeId && res.data.role?.toLowerCase() === 'student') {
         activate({ ltik, gameId, challengeId, activityId: exerciseId });
