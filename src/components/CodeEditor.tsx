@@ -43,7 +43,7 @@ const CodeEditor = ({
       // A label of the action that will be presented to the user.
       label: "Run your code",
       // An optional array of keybindings for the action.
-      keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter],
+      keybindings: monaco ? [monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter] : [],
       // A precondition for this action.
       precondition: null,
       // A rule to evaluate on top of the precondition in order to dispatch the keybindings.
@@ -62,7 +62,7 @@ const CodeEditor = ({
     editorRef.current.addAction({
       id: "submitYourCode",
       label: "Submit your code",
-      keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.US_BACKSLASH],
+      keybindings: monaco ? [monaco.KeyMod.CtrlCmd | monaco.KeyCode.Backslash] : [],
       precondition: null,
       keybindingContext: null,
       contextMenuGroupId: "navigation",
@@ -104,7 +104,7 @@ const CodeEditor = ({
         editorRef.current.addAction({
           id: "submitYourCode",
           label: "Submit your code",
-          keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.US_BACKSLASH],
+          keybindings: monaco ? [monaco.KeyMod.CtrlCmd | monaco.KeyCode.Backslash] : [],
           precondition: null,
           keybindingContext: null,
           contextMenuGroupId: "navigation",
@@ -136,7 +136,7 @@ const CodeEditor = ({
         value={code}
         onChange={handleEditorChange}
         theme={editorTheme}
-        wrapperClassName="editor-wrapper"
+        // wrapperClassName="editor-wrapper"
         className="editor"
         options={{
           fixedOverflowWidgets: true,
