@@ -45,7 +45,7 @@ const Game = ({
       opacity={game.state === "LOCKED" ? 0.5 : 1}
       pointerEvents={game.state === "LOCKED" ? "none" : "all"}
       small={small}
-      archival={game.archival}
+      archival={game.archival || undefined}
       data-cy="game-description-wrapper"
     >
       <Flex justifyContent="space-between" width="100%" alignItems="center">

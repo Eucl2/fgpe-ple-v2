@@ -306,15 +306,8 @@ const Navbar = () => {
                 {!focusActivity && (
                   <MenuItem>
                     <NavLink to="/profile" data-cy="profile-mobile">
-                      <Flex color={colorMode === "dark" ? "white" : "black"}>
-                        <IconButton
-                          height={6}
-                          _focus={{}}
-                          variant="link"
-                          colorScheme="gray"
-                          aria-label="Profile"
-                          icon={<BiUserCircle fontSize={24} />}
-                        />
+                      <Flex color={colorMode === "dark" ? "white" : "black"} alignItems="center">
+                        <BiUserCircle fontSize={24} style={{ marginRight: '8px' }} />
                         {t("Your games")}
                       </Flex>
                     </NavLink>
@@ -323,15 +316,8 @@ const Navbar = () => {
                 {!focusActivity && (
                   <MenuItem>
                     <NavLink to="/profile/settings" data-cy="settings-mobile">
-                      <Flex color={colorMode === "dark" ? "white" : "black"}>
-                        <IconButton
-                          height={6}
-                          _focus={{}}
-                          variant="link"
-                          colorScheme="gray"
-                          aria-label="Settings"
-                          icon={<SettingsIcon fontSize={20} />}
-                        />
+                      <Flex color={colorMode === "dark" ? "white" : "black"} alignItems="center">
+                        <SettingsIcon fontSize={20} style={{ marginRight: '8px' }} />
                         {t("Account settings")}
                       </Flex>
                     </NavLink>
@@ -343,28 +329,16 @@ const Navbar = () => {
                     shouldBaseTutorialStart && setToggledDarkMode(true);
                   }}
                 >
-                  <IconButton
-                    height={6}
-                    _focus={{}}
-                    variant="link"
-                    colorScheme="gray"
-                    aria-label="Toggle color mode"
-                    icon={<VscColorMode fontSize={24} />}
-                    data-cy="toggle-color-mode-mobile"
-                  />
-                  {t("settings.darkMode")}
+                  <Flex alignItems="center">
+                    <VscColorMode fontSize={24} style={{ marginRight: '8px' }} />
+                    {t("settings.darkMode")}
+                  </Flex>
                 </MenuItem>
                 <MenuItem onClick={onOpenLanguageModal}>
-                  <IconButton
-                    height={6}
-                    _focus={{}}
-                    variant="link"
-                    colorScheme="gray"
-                    aria-label="Change language"
-                    icon={<IoLanguage fontSize={24} />}
-                    data-cy="change-language-mobile"
-                  />
-                  {t("Language")}
+                  <Flex alignItems="center">
+                    <IoLanguage fontSize={24} style={{ marginRight: '8px' }} />
+                    {t("Language")}
+                  </Flex>
                 </MenuItem>
                 {focusActivity && (
                   <MenuItem

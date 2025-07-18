@@ -69,7 +69,7 @@ const getGridDimensions = (rewardsCount: number) => {
   const sqrt = Math.sqrt(rewardsCount);
   // Math.ceil(Math.sqrt(arrayLength) * 2)}
   const columns = Math.floor(sqrt * 2) || 1;
-  console.log(columns);
+  // console.log(columns);
   const rows = Math.ceil(sqrt / 2) || 1;
   return { columns, rows };
 };
