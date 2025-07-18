@@ -396,7 +396,7 @@ const evaluateSubmission = async (isSpotBugMode?: boolean) => {
   setWaitingForEvaluationResult(true);
   
   try {
-    // 1. run checksource to verify if solution meets requirements
+    //run checksource to verify if solution meets requirements
     const checksourceResult = await executeCheckSource(code, exerciseData.checksource);
     
     if (checksourceResult !== 'OK') {
@@ -413,8 +413,8 @@ const evaluateSubmission = async (isSpotBugMode?: boolean) => {
       return;
     }
     
-    // 2. Run test code
-    const fullCode = `${exerciseData.precode}\n\n${code}\n\n${exerciseData.postcode}`;
+    //run test code
+    const fullCode = `${exerciseData.precode}\n\n${code}\n\n${exerciseData.postcode}\n\n${exerciseData.testcode}`;
     additionalOutputs.current = [];
     
     // Use different execution based on language
@@ -436,90 +436,65 @@ const evaluateSubmission = async (isSpotBugMode?: boolean) => {
           getInput: () => undefined,
           onFinish: () => {},
           onSuccess: () => {
-            // Run tests after successful execution
-            runPython({
-              code: `${fullCode}\n\n${exerciseData.testcode}`,
-              setLoading: setWaitingForEvaluationResult,
-              setOutput: (v: string) => {
-                additionalOutputs.current = [...additionalOutputs.current, v];
-              },
-              setResult: (v: Result) => {
-                // If we got here, the code executed without runtime errors
+            setSubmissionResult(Result.ACCEPT);
+            setSubmissionFeedback("All tests passed!");
+            setValidationOutputs(additionalOutputs.current);
+            
+            try {
+              console.log("Debug - keycloak.profile:", keycloak.profile);
+              console.log("Debug - activity?.id:", activity?.id);
+              console.log("Debug - gameId:", gameId);
+              console.log("Debug - Numbers:", {
+                playerId: Number(keycloak.profile?.id || "1"),
+                exerciseId: Number(activity?.id || "1"),
+                gameId: Number(gameId || "1")
+              });
+              const eventData = {
+                eventType: "submit",
+                eventResult: 100,
+                playerId: stringToNumber(keycloak.profile?.id || "1"),
+                exerciseId: stringToNumber(activity?.id || "1"),
+                gameId: stringToNumber(gameId || "1")
+              };
+              
+              console.log("Sending event to WASM:", eventData);
+              
+              processGameEvent(eventData).then(gameResult => {
+                console.log("Processing WASM gameResult:", gameResult);
                 
-                setSubmissionResult(Result.ACCEPT);
-              },
-              stopExecution,
-              getInput: () => undefined,
-              onFinish: () => {},
-              onSuccess: () => {
-                setSubmissionResult(Result.ACCEPT);
-                setSubmissionFeedback("All tests passed!");
-                setValidationOutputs(additionalOutputs.current);
+                let notificationShown = false;
                 
-                try {
-                  console.log("Debug - keycloak.profile:", keycloak.profile);
-                  console.log("Debug - activity?.id:", activity?.id);
-                  console.log("Debug - gameId:", gameId);
-                  console.log("Debug - Numbers:", {
-                    playerId: Number(keycloak.profile?.id || "1"),
-                    exerciseId: Number(activity?.id || "1"),
-                    gameId: Number(gameId || "1")
-                  });
-                  const eventData = {
-                    eventType: "submit",
-                    eventResult: 100,
-                    playerId: stringToNumber(keycloak.profile?.id || "1"),
-                    exerciseId: stringToNumber(activity?.id || "1"),
-                    gameId: stringToNumber(gameId || "1")
-                  };
-                  
-                  console.log("Sending event to WASM:", eventData);
-                  
-                  processGameEvent(eventData).then(gameResult => {
-                    console.log("Processing WASM gameResult:", gameResult);
-                    
-                    let notificationShown = false;
-                    
-                    if (gameResult && gameResult.results && Array.isArray(gameResult.results) && gameResult.results.length > 0) {
-                      gameResult.results.forEach((result: any) => {
-                        if (Array.isArray(result) && result.length >= 2 && result[0] === "Message") {
-                          if (Array.isArray(result[1]) && result[1].length > 0) {
-                            addNotification({
-                              title: "Achievement",
-                              description: result[1][0],
-                              status: "success",
-                            });
-                            notificationShown = true;
-                          }
-                        }
-                      });
+                if (gameResult && gameResult.results && Array.isArray(gameResult.results) && gameResult.results.length > 0) {
+                  gameResult.results.forEach((result: any) => {
+                    if (Array.isArray(result) && result.length >= 2 && result[0] === "Message") {
+                      if (Array.isArray(result[1]) && result[1].length > 0) {
+                        addNotification({
+                          title: "Achievement",
+                          description: result[1][0],
+                          status: "success",
+                        });
+                        notificationShown = true;
+                      }
                     }
-                    
-                    // If no notification shown but game state was updated, show a fallback notification
-                    if (!notificationShown && gameResult && gameResult.game_state) {
-                      addNotification({
-                        title: "Solution Accepted",
-                        description: "Solution has been recorded successfully.",
-                        status: "success",
-                      });
-                    }
-                  }).catch(wasmError => {
-                    console.error("WASM processing error:", wasmError);
                   });
-                } catch (wasmError) {
-                  console.error("WASM processing error:", wasmError);
                 }
                 
-                resolve(true);
-              },
-              onError: (err: string) => {
-                // Tsst failed
-                setSubmissionResult(Result.WRONG_ANSWER);
-                setSubmissionFeedback(err);
-                setValidationOutputs(additionalOutputs.current);
-                resolve(true);
-              }
-            });
+                // If no notification shown but game state was updated, shows a fallback notification
+                if (!notificationShown && gameResult && gameResult.game_state) {
+                  addNotification({
+                    title: "Solution Accepted",
+                    description: "Solution has been recorded successfully.",
+                    status: "success",
+                  });
+                }
+              }).catch(wasmError => {
+                console.error("WASM processing error:", wasmError);
+              });
+            } catch (wasmError) {
+              console.error("WASM processing error:", wasmError);
+            }
+            
+            resolve(true);
           },
           onError: (err: string) => {
             errors.push({
