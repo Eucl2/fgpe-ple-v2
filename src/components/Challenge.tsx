@@ -103,14 +103,14 @@ const Challenge = () => {
       {
         skip: !gameId,
         variables: { gameId },
-        onSubscriptionData: ({ subscriptionData }) => {
-          if (subscriptionData.data) {
+        onData: ({ data }) => {
+          if (data.data) {
             console.log(
               "Subscription - CHALLENGE STATUS UPDATED",
-              subscriptionData.data
+              data.data
             );
             const challengeStatusUpdated =
-              subscriptionData.data.challengeStatusUpdatedStudent;
+              data.data.challengeStatusUpdatedStudent;
 
             if (challengeStatusUpdated.state === State.FAILED) {
               addNotification({
@@ -136,43 +136,66 @@ const Challenge = () => {
       {
         skip: !gameId,
         variables: { gameId },
-        onSubscriptionData: ({ subscriptionData }) => {
-          console.log("Got subscription data", subscriptionData);
+        onData: ({ data }) => {
+          console.log("Got subscription data", data);
 
-          if (subscriptionData.data) {
+          if (data.data) {
             addNotification({
               status:
-                subscriptionData.data.rewardReceivedStudent.reward.kind ===
+                data.data.rewardReceivedStudent.reward.kind ===
                 RewardType.HINT
                   ? "info"
                   : "success",
-              title: subscriptionData.data.rewardReceivedStudent.reward.name,
+              title: data.data.rewardReceivedStudent.reward.name,
               description:
-                subscriptionData.data.rewardReceivedStudent.reward.description,
+                data.data.rewardReceivedStudent.reward.description,
               rewardImage:
-                subscriptionData.data.rewardReceivedStudent.reward.image,
+                data.data.rewardReceivedStudent.reward.image,
               rewardKind:
-                subscriptionData.data.rewardReceivedStudent.reward.kind,
+                data.data.rewardReceivedStudent.reward.kind,
               showFireworks:
-                subscriptionData.data.rewardReceivedStudent.reward.kind ===
+                data.data.rewardReceivedStudent.reward.kind ===
                   RewardType.BADGE ||
-                subscriptionData.data.rewardReceivedStudent.reward.kind ===
+                data.data.rewardReceivedStudent.reward.kind ===
                   RewardType.VIRTUAL_ITEM,
             });
           }
 
           if (
-            subscriptionData.data?.rewardReceivedStudent.reward.kind ===
+            data.data?.rewardReceivedStudent.reward.kind ===
             RewardType.HINT
           ) {
             setHints([
               ...hints,
-              subscriptionData.data.rewardReceivedStudent.reward,
+              data.data.rewardReceivedStudent.reward,
             ]);
           }
         },
       }
     );
+
+  // Add error handling for subscription errors
+  useEffect(() => {
+    if (subUpdatedChallengeStatusError) {
+      console.error("Challenge Status Subscription Error:", {
+        message: subUpdatedChallengeStatusError.message,
+        graphQLErrors: subUpdatedChallengeStatusError.graphQLErrors,
+        networkError: subUpdatedChallengeStatusError.networkError
+      });
+      console.log("Challenge status subscriptions disabled - app will work without real-time updates");
+    }
+  }, [subUpdatedChallengeStatusError]);
+
+  useEffect(() => {
+    if (subRewardsError) {
+      console.error("Rewards Subscription Error:", {
+        message: subRewardsError.message,
+        graphQLErrors: subRewardsError.graphQLErrors,  
+        networkError: subRewardsError.networkError
+      });
+      console.log("Reward subscriptions disabled - app will work without real-time notifications");
+    }
+  }, [subRewardsError]);
 
   const {
     data: activityData,
