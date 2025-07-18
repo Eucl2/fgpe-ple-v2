@@ -3,7 +3,9 @@ import {
   ApolloProvider,
   InMemoryCache,
   split,
+  from,
 } from "@apollo/client";
+import { onError } from "@apollo/client/link/error";
 import './polyfills';
 import { setContext } from "@apollo/client/link/context";
 import { WebSocketLink } from "@apollo/client/link/ws";
@@ -126,6 +128,23 @@ const splitLink = split(
   wsLink,
   authLink.concat(httpLink)
 );
+const errorLink = onError(({ graphQLErrors, networkError, operation, forward }) => {
+  // Handle cancellation errors silently
+  if (networkError && networkError.message === 'operation is manually canceled') {
+    console.log('Apollo operation canceled - this is normal');
+    return;
+  }
+  
+  if (graphQLErrors) {
+    graphQLErrors.forEach(({ message, locations, path }) =>
+      console.error(`GraphQL error: Message: ${message}, Location: ${locations}, Path: ${path}`)
+    );
+  }
+  
+  if (networkError) {
+    console.error(`Network error: ${networkError}`);
+  }
+});
 
 const cache = new InMemoryCache();
 
@@ -134,7 +153,7 @@ persistCache({
   storage: new LocalStorageWrapper(window.localStorage),
 }).then(() => {
   const client = new ApolloClient({
-    link: splitLink,
+    link: from([errorLink, splitLink]),
     cache: cache,
     defaultOptions: {
       watchQuery: {
@@ -198,5 +217,18 @@ const Main = () => {
     </Suspense>
   );
 };
+
+// Handle unhandled promise rejections globally
+window.addEventListener('unhandledrejection', function(event) {
+  if (event.reason && 
+      event.reason.type === 'cancelation' && 
+      event.reason.msg === 'operation is manually canceled') {
+    console.log('Apollo operation canceled - this is normal');
+    event.preventDefault();
+    return;
+  }
+  
+  console.error('Unhandled promise rejection:', event.reason);
+});
 
 serviceWorkerRegistration.register();
