@@ -8,6 +8,8 @@ import { getLeaderboardsQuery } from "../generated/getLeaderboardsQuery";
 import Error from "./Error";
 import ColumnFilter from "./TableComponent/ColumnFilter";
 import TableComponent from "./TableComponent/TableNoSorting";
+import { TFunction } from "i18next";
+
 
 const GET_LEADERBOARDS = gql`
   query getLeaderboardsQuery($gameId: String!) {
@@ -83,7 +85,7 @@ const RankingTable = ({ gameId }: { gameId: string }) => {
 
 const getMetrics = (
   groupRankings: any,
-  tFunction: (value: string) => string
+  tFunction: TFunction
 ) => {
   let metricsArray: any = [];
   if (groupRankings.length < 1) {
@@ -95,13 +97,13 @@ const getMetrics = (
 
   for (let i = 0; i < keys.length; i++) {
     metricsArray.push({
-      Header: `${tFunction("table.metric")} [${tFunction(keys[i])}]`,
+      Header: `${tFunction("table.metric")} [${tFunction(keys[i], { defaultValue: keys[i] })}]`,
       accessor: `score.${keys[i]}`,
       Cell: ({ value }: { value: any }) => {
-        if (typeof value != "undefined") {
-          if (typeof value == "object") {
+        if (typeof value !== "undefined") {
+          if (typeof value === "object") {
             let sum = 0;
-            Object.keys(value).map((key) => {
+            Object.keys(value).forEach((key) => {
               sum += value[key];
             });
 
