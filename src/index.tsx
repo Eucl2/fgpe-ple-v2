@@ -1,3 +1,9 @@
+// workaround to hide the React error overlay in development mode.
+if (window.location.hostname === 'localhost') {
+  const style = document.createElement('style');
+  style.innerHTML = '#webpack-dev-server-client-overlay { display: none !important; }';
+  document.head.appendChild(style);
+}
 import {
   ApolloClient,
   ApolloProvider,

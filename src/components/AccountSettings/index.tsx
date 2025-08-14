@@ -1,9 +1,11 @@
-import { Box, VStack } from "@chakra-ui/layout";
-import { Heading } from "@chakra-ui/react";
+import { ArrowBackIcon } from "@chakra-ui/icons";
+import { Box, VStack, Flex } from "@chakra-ui/layout";
+import { Heading, Button } from "@chakra-ui/react";
 import { useKeycloak } from "@react-keycloak/web";
 import axios from "axios";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useHistory } from "react-router-dom";
 import withChangeAnimation from "../../utilities/withChangeAnimation";
 import { useNotifications } from "../Notifications";
 import ChangeAvatarURL from "./ChangeAvatarURL";
@@ -13,6 +15,7 @@ import PasswordChangeForm from "./PasswordChangeForm";
 const AccountSettings = () => {
   const { add: addNotification } = useNotifications();
 
+  const history = useHistory();
   const { keycloak } = useKeycloak();
   const { t } = useTranslation();
   const [userProfile, setUserProfile] = useState<any>({});
@@ -134,16 +137,23 @@ const AccountSettings = () => {
 
   return (
     <Box maxWidth={500} margin="auto">
-      <Heading
-        as="h3"
-        size="md"
-        marginTop={5}
-        marginBottom={5}
-        width="100%"
-        textAlign="center"
-      >
-        {t("Account settings")}
-      </Heading>
+      {/* Header withh return button */}
+      <Flex width="100%" justifyContent="space-between" alignItems="center" marginTop={5} marginBottom={5}>
+        <Button
+          variant="outline"
+          leftIcon={<ArrowBackIcon />}
+          onClick={() => history.push("/profile")}
+        >
+          {t("Back")}
+        </Button>
+        
+        <Heading as="h3" size="md" textAlign="center">
+          {t("Account settings")}
+        </Heading>
+        
+        { }
+        <Box width="80px" />
+      </Flex>
 
       <VStack spacing={3}>
         <Editable
