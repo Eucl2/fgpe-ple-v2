@@ -513,7 +513,7 @@ const evaluateSubmission = async (isSpotBugMode?: boolean) => {
       // For non-Python languages or when skulpt is disabled
       setSubmissionFeedback("This language is not supported for in-browser execution yet");
       setSubmissionResult(Result.WRONG_ANSWER);
-      setValidationOutputs(["Language not supported for in-browser execution"]);
+      setValidationOutputs(null);
     }
     
     saveSubmissionDataInLocalStorage(
@@ -636,7 +636,7 @@ const evaluateSubmission = async (isSpotBugMode?: boolean) => {
         // For non-Python languages or when Skulpt is disabled
         setSubmissionFeedback("This language is not supported for in-browser execution yet");
         setSubmissionResult(Result.WRONG_ANSWER);
-        setValidationOutputs(["Language not supported for in-browser execution"]);
+        setValidationOutputs(null);
       }
     } catch (error) {
       console.error("Error during validation:", error);
