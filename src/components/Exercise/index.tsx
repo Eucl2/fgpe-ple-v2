@@ -3,7 +3,7 @@ import {
   ApolloQueryResult,
 } from "@apollo/client";
 import { Box, Flex, Skeleton, useToast } from "@chakra-ui/react";
-import { useKeycloak } from "@react-keycloak/web";
+import { useKeycloak } from "../../auth/keycloak-compat";
 import { useContext, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FocusActivityContextType } from "../../@types/focus-activity";

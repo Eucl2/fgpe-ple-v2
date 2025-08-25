@@ -1,5 +1,5 @@
 import styled from "@emotion/styled";
-import { useKeycloak } from "@react-keycloak/web";
+import { useKeycloak } from "./auth/keycloak-compat";
 import { AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";

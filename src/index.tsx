@@ -24,19 +24,36 @@ import {
 import { createUploadLink } from "apollo-upload-client";
 import React, { Suspense } from "react";
 import ReactDOM from "react-dom";
-import { ReactKeycloakProvider } from "@react-keycloak/web";
+import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 import App from "./App";
 import MainLoading from "./components/MainLoading";
 import "./i18n/config";
-import keycloak from "./keycloak";
+// OIDC imports
+import { AuthProvider } from "./auth/AuthContext";
+import AuthCallback from "./auth/AuthCallback";
+import SilentCallback from "./auth/SilentCallback";
 import theme from "./styles/theme/themes";
 import ClearLocalStorage from "./utilities/ClearLocalStorage";
 import { persistCache, LocalStorageWrapper } from "apollo3-cache-persist";
 import * as serviceWorkerRegistration from "./service-worker-registration";
-import { restoreTokens, storeTokens } from "./utilities/Storage";
 import { useTranslation } from "react-i18next";
 
 ClearLocalStorage();
+
+// Helper function to get the OIDC token
+const getOIDCToken = (): string => {
+  const storageKey = `oidc.user:${process.env.REACT_APP_KEYCLOAK_URL}/realms/${process.env.REACT_APP_KEYCLOAK_REALM}:${process.env.REACT_APP_KEYCLOAK_CLIENT_ID}`;
+  const storedUser = localStorage.getItem(storageKey);
+  if (storedUser) {
+    try {
+      const user = JSON.parse(storedUser);
+      return user.access_token || '';
+    } catch {
+      return '';
+    }
+  }
+  return '';
+};
 
 const wsLink = new WebSocketLink({
   uri: process.env.REACT_APP_GRAPHQL_WS,
@@ -44,40 +61,12 @@ const wsLink = new WebSocketLink({
     reconnect: true,
     lazy: true,
     connectionParams: () => {
-      const token = keycloak.token;
-      if (keycloak.isTokenExpired()) {
-        keycloak
-          .updateToken(1)
-          .then(function (refreshed: boolean) {
-            if (refreshed) {
-              console.log("Token was successfully refreshed");
-            } else {
-              console.log("Token is still valid");
-            }
-            return {
-              headers: {
-                authorization: token ? `bearer ${token}` : "",
-              },
-            };
-          })
-          .catch(function () {
-            console.log(
-              "Failed to refresh the token, or the session has expired"
-            );
-          });
-      } else {
-        return {
-          headers: {
-            authorization: token ? `bearer ${token}` : "",
-          },
-        };
-      }
-
-      // return {
-      //   headers: {
-      //     authorization: `bearer ${keycloak.token}`,
-      //   },
-      // };
+      const token = getOIDCToken();
+      return {
+        headers: {
+          authorization: token ? `Bearer ${token}` : "",
+        },
+      };
     },
   },
 });
@@ -87,40 +76,13 @@ const httpLink = createUploadLink({
 });
 
 const authLink = setContext((_, { headers }) => {
-  const token = keycloak.token;
-  if (keycloak.isTokenExpired()) {
-    return keycloak
-      .updateToken(1)
-      .then(function (refreshed: boolean) {
-        if (refreshed) {
-          console.log("Token was successfully refreshed");
-        } else {
-          console.log("Token is still valid");
-        }
-        return {
-          headers: {
-            ...headers,
-            Authorization: token ? `bearer ${token}` : "",
-          },
-        };
-      })
-      .catch(function () {
-        console.log("Failed to refresh the token, or the session has expired");
-        return {
-          headers: {
-            ...headers,
-            Authorization: "",
-          },
-        };
-      });
-  } else {
-    return {
-      headers: {
-        ...headers,
-        Authorization: token ? `bearer ${token}` : "",
-      },
-    };
-  }
+  const token = getOIDCToken();
+  return {
+    headers: {
+      ...headers,
+      Authorization: token ? `Bearer ${token}` : "",
+    },
+  };
 });
 
 const splitLink = split(
@@ -171,46 +133,20 @@ persistCache({
     },
   });
 
-  keycloak.onTokenExpired = () => {
-    console.log("expired " + new Date());
-    keycloak
-      .updateToken(50)
-      .then((refreshed: boolean) => {
-        if (refreshed) {
-          console.log("refreshed " + new Date());
-        } else {
-          console.log("not refreshed " + new Date());
-        }
-      })
-      .catch(() => {
-        console.error("Failed to refresh token " + new Date());
-      });
-  };
-
-  const tokens = restoreTokens();
-
   ReactDOM.render(
     <ChakraProvider theme={theme} colorModeManager={localStorageManager}>
       <ColorModeScript initialColorMode={theme.config.lightTheme} />
-      <ReactKeycloakProvider
-        authClient={keycloak}
-        initOptions={{
-          onLoad: "check-sso",
-          checkLoginIframe: false,
-          enableLogging: true,
-          token: tokens.token,
-          idToken: tokens.idToken,
-          refreshToken: tokens.refreshToken,
-        }}
-        LoadingComponent={<MainLoading />}
-        onTokens={(tokens) =>
-          storeTokens(tokens.token, tokens.idToken, tokens.refreshToken)
-        }
-      >
+      <AuthProvider loadingComponent={MainLoading}>
         <ApolloProvider client={client}>
-          <Main />
+          <Router>
+            <Switch>
+              <Route exact path="/auth/callback" component={AuthCallback} />
+              <Route exact path="/auth/silent" component={SilentCallback} />
+              <Route path="/" component={Main} />
+            </Switch>
+          </Router>
         </ApolloProvider>
-      </ReactKeycloakProvider>
+      </AuthProvider>
     </ChakraProvider>,
     document.getElementById("root")
   );

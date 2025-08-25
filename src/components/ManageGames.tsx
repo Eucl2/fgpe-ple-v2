@@ -1,6 +1,6 @@
 import { gql, useMutation, useQuery } from "@apollo/client";
 import { Box, Button, Flex, Heading, useDisclosure } from "@chakra-ui/react";
-import { useKeycloak } from "@react-keycloak/web";
+import { useKeycloak } from "../auth/keycloak-compat";
 import React, { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useHistory } from "react-router-dom";

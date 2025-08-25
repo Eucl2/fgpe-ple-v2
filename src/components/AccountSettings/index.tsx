@@ -1,7 +1,7 @@
 import { ArrowBackIcon } from "@chakra-ui/icons";
 import { Box, VStack, Flex } from "@chakra-ui/layout";
 import { Heading, Button } from "@chakra-ui/react";
-import { useKeycloak } from "@react-keycloak/web";
+import { useKeycloak } from "../../auth/keycloak-compat";
 import axios from "axios";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";

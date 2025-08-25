@@ -19,8 +19,7 @@ import {
   useDisclosure,
 } from "@chakra-ui/react";
 import styled from "@emotion/styled";
-import { KeycloakProfile } from "@fgpe/keycloak-js";
-import { useKeycloak } from "@react-keycloak/web";
+import { useKeycloak, KeycloakProfile } from "../auth/keycloak-compat";
 import { useContext, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { BiUserCircle } from "react-icons/bi";

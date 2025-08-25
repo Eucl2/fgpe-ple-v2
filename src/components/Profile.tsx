@@ -1,4 +1,4 @@
-import { useKeycloak } from "@react-keycloak/web";
+import { useKeycloak } from "../auth/keycloak-compat";
 import React from "react";
 import StudentProfile from "./StudentProfile";
 import TeacherProfile from "./TeacherProfile";

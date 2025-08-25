@@ -1,6 +1,6 @@
 import { gql, useQuery } from "@apollo/client";
 import { Heading } from "@chakra-ui/react";
-import { useKeycloak } from "@react-keycloak/web";
+import { useKeycloak } from "../auth/keycloak-compat";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { PlayerGameProfiles } from "../generated/PlayerGameProfiles";

@@ -1,4 +1,4 @@
-import { useKeycloak } from "@react-keycloak/web";
+import { useKeycloak } from "../auth/keycloak-compat";
 import axios from "axios";
 import { useContext, useEffect } from "react";
 import { useHistory } from "react-router-dom";

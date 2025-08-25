@@ -6,7 +6,7 @@ import withChangeAnimation from "../utilities/withChangeAnimation";
 import ErasmusLogo from "../images/erasmus.png";
 import LogoSVG from "../images/logo.svg";
 
-import { useKeycloak } from "@react-keycloak/web";
+import { useKeycloak } from "../auth/keycloak-compat";
 
 const HomePage = () => {
   const { t } = useTranslation(["translation", "tos"]);

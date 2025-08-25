@@ -1,6 +1,6 @@
 import { Spinner } from "@chakra-ui/react";
 import styled from "@emotion/styled";
-import { useKeycloak } from "@react-keycloak/web";
+import { useKeycloak } from "../auth/keycloak-compat";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { Route, RouteProps } from "react-router-dom";
