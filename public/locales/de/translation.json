@@ -145,6 +145,17 @@
         "success": "Erfolgreich verbunden",
         "error": "Es liegt ein Problem mit Ihrer Verbindung vor. Versuchen Sie, diese zu prüfen."
       }
+    },
+    "feedback": {
+      "solutionAccepted": {
+        "title": "Lösung Akzeptiert",
+        "description": "Die Lösung wurde erfolgreich aufgezeichnet."
+      },
+      "noCode": {
+        "title": "Kein Code",
+        "description": "Bitte schreiben Sie Code, bevor Sie einreichen",
+        "descriptionRun": "Bitte schreiben Sie Code, bevor Sie ausführen"
+      }
     }
   },
   "teacher": {

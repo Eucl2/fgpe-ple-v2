@@ -145,6 +145,17 @@
         "success": "Conectado exitosamente",
         "error": "Hay un problema con tu conexión, intenta actualizar"
       }
+    },
+    "feedback": {
+      "solutionAccepted": {
+        "title": "Solución Aceptada",
+        "description": "La solución ha sido registrada exitosamente."
+      },
+      "noCode": {
+        "title": "Sin Código",
+        "description": "Por favor escribe código antes de enviar",
+        "descriptionRun": "Por favor escribe código antes de ejecutar"
+      }
     }
   },
   "teacher": {

@@ -145,6 +145,17 @@
         "success": "Conectado com sucesso",
         "error": "Há um problema com sua conexão, tente atualizar"
       }
+    },
+    "feedback": {
+      "solutionAccepted": {
+        "title": "Solução Aceite",
+        "description": "A solução foi registada com sucesso."
+      },
+      "noCode": {
+        "title": "Sem Código",
+        "description": "Por favor escreva código antes de enviar",
+        "descriptionRun": "Por favor escreva código antes de executar"
+      }
     }
   },
   "teacher": {

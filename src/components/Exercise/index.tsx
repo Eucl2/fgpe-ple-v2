@@ -386,8 +386,8 @@ const evaluateSubmission = async (isSpotBugMode?: boolean) => {
   
   if (!code) {
     addNotification({
-      title: "No Code",
-      description: "Please write some code before submitting",
+      title: t("playground.feedback.noCode.title"),
+      description: t("playground.feedback.noCode.description"),
       status: "warning",
     });
     return;
@@ -482,8 +482,8 @@ const evaluateSubmission = async (isSpotBugMode?: boolean) => {
                 // If no notification shown but game state was updated, shows a fallback notification
                 if (!notificationShown && gameResult && gameResult.game_state) {
                   addNotification({
-                    title: "Solution Accepted",
-                    description: "Solution has been recorded successfully.",
+                    title: t("playground.feedback.solutionAccepted.title"),
+                    description: t("playground.feedback.solutionAccepted.description"),
                     status: "success",
                   });
                 }
@@ -544,8 +544,8 @@ const evaluateSubmission = async (isSpotBugMode?: boolean) => {
     
     if (!code) {
       addNotification({
-        title: "No Code",
-        description: "Please write some code before running",
+        title: t("playground.feedback.noCode.title"),
+        description: t("playground.feedback.noCode.descriptionRun"),
         status: "warning",
       });
       return;

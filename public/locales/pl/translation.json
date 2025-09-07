@@ -160,6 +160,17 @@
         "success": "Połączono pomyślnie",
         "error": "Wystąpił problem z Twoim połączeniem, spróbuj odświeżyć"
       }
+    },
+    "feedback": {
+      "solutionAccepted": {
+        "title": "Rozwiązanie Zaakceptowane",
+        "description": "Rozwiązanie zostało pomyślnie zapisane."
+      },
+      "noCode": {
+        "title": "Brak Kodu",
+        "description": "Proszę napisać kod przed wysłaniem",
+        "descriptionRun": "Proszę napisać kod przed uruchomieniem"
+      }
     }
   },
   "teacher": {

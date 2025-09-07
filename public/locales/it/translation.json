@@ -145,6 +145,17 @@
         "success": "Connesso con successo",
         "error": "C'è stato un problema con la connessione, prova ad aggiornare la pagina"
       }
+    },
+    "feedback": {
+      "solutionAccepted": {
+        "title": "Soluzione Accettata",
+        "description": "La soluzione è stata registrata con successo."
+      },
+      "noCode": {
+        "title": "Nessun Codice",
+        "description": "Per favore scrivi del codice prima di inviare",
+        "descriptionRun": "Per favore scrivi del codice prima di eseguire"
+      }
     }
   },
   "teacher": {

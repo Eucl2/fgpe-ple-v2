@@ -155,6 +155,17 @@
         "success": "Connected successfully",
         "error": "There's a problem with your connection, try to refresh"
       }
+    },
+    "feedback": {
+      "solutionAccepted": {
+        "title": "Solution Accepted",
+        "description": "Solution has been recorded successfully."
+      },
+      "noCode": {
+        "title": "No Code",
+        "description": "Please write some code before submitting",
+        "descriptionRun": "Please write some code before running"
+      }
     }
   },
   "teacher": {
