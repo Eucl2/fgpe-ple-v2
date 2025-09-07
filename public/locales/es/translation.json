@@ -119,8 +119,9 @@
       "reload": "Recargar",
       "restore": "Restaurar",
       "ready": "Listo",
-      "next": "próximo",
+      "next": "Próximo",
       "addTestValues": "Agregar valores de prueba",
+      "nextTooltip": "Ir al siguiente ejercicio sin resolver",
       "status": {
         "status": "Estado",
         "CONNECTION_PROBLEM": "PROBLEMA DE CONEXIÓN",
@@ -133,7 +134,12 @@
         "PROCESSING": "PROCESANDO",
         "RESOURCE_USAGE_EXCEEDED": "USO DE RECURSOS EXCEDIDO",
         "TIMEOUT": "SE ACABÓ EL TIEMPO",
-        "WRONG_ANSWER": "RESPUESTA INCORRECTA"
+        "WRONG_ANSWER": "RESPUESTA INCORRECTA",
+        "tooltip": {
+          "COMPILATION_ERROR": "Tu código tiene errores de sintaxis que impiden su ejecución",
+          "RUNTIME_ERROR": "Tu código se ejecuta pero falla durante la ejecución",
+          "ACCEPT": "Tu solución fue aceptada. ¡Buen trabajo!"
+        }
       },
       "connection": {
         "success": "Conectado exitosamente",

@@ -131,6 +131,7 @@
       "ready": "Ready",
       "next": "Next",
       "addTestValues": "Add test values",
+      "nextTooltip": "Go to next unsolved exercise",
       "status": {
         "status": "Status",
         "CONNECTION_PROBLEM": "CONNECTION PROBLEM",
@@ -143,7 +144,12 @@
         "PROCESSING": "PROCESSING",
         "RESOURCE_USAGE_EXCEEDED": "RESOURCE USAGE EXCEEDED",
         "TIMEOUT": "TIMEOUT",
-        "WRONG_ANSWER": "WRONG ANSWER"
+        "WRONG_ANSWER": "WRONG ANSWER",
+        "tooltip": {
+          "COMPILATION_ERROR": "Your code has syntax errors that prevent it from running",
+          "RUNTIME_ERROR": "Your code runs but crashes during execution",
+          "ACCEPT": "Your solution was accepted. Good job!"
+        }
       },
       "connection": {
         "success": "Connected successfully",

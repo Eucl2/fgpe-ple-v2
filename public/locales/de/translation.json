@@ -121,6 +121,7 @@
       "ready": "Fertig",
       "next": "Nächste",
       "addTestValues": "Testwerte hinzufügen",
+      "nextTooltip": "Zur nächsten ungelösten Übung gehen",
       "status": {
         "status": "Status",
         "CONNECTION_PROBLEM": "VERBINDUNGSFEHLER",
@@ -133,7 +134,12 @@
         "PROCESSING": "WIRD BEARBEITET",
         "RESOURCE_USAGE_EXCEEDED": "RESSOURCENVERBRAUCH ÜBERSCHRITTEN",
         "TIMEOUT": "DIE ZEIT IST UM",
-        "WRONG_ANSWER": "FALSCHE ANTWORT"
+        "WRONG_ANSWER": "FALSCHE ANTWORT",
+        "tooltip": {
+          "COMPILATION_ERROR": "Ihr Code enthält Syntaxfehler, die die Ausführung verhindern",
+          "RUNTIME_ERROR": "Ihr Code läuft, aber stürzt während der Ausführung ab",
+          "ACCEPT": "Ihre Lösung wurde akzeptiert. Gut gemacht!"
+        }
       },
       "connection": {
         "success": "Erfolgreich verbunden",

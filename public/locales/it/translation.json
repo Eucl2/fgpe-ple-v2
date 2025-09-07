@@ -121,6 +121,7 @@
       "ready": "Pronto",
       "next": "Successivo",
       "addTestValues": "Aggiungi valori di test",
+      "nextTooltip": "Vai al prossimo esercizio non risolto",
       "status": {
         "status": "Stato",
         "CONNECTION_PROBLEM": "PROBLEMA DI CONNESSIONE",
@@ -133,7 +134,12 @@
         "PROCESSING": "IN ELABORAZIONE",
         "RESOURCE_USAGE_EXCEEDED": "UTILIZZO DELLE RISORSE SUPERATO",
         "TIMEOUT": "TIMEOUT",
-        "WRONG_ANSWER": "RISPOSTA SBAGLIATA"
+        "WRONG_ANSWER": "RISPOSTA SBAGLIATA",
+        "tooltip": {
+          "COMPILATION_ERROR": "Il tuo codice contiene errori di sintassi che ne impediscono l'esecuzione",
+          "RUNTIME_ERROR": "Il tuo codice viene eseguito ma va in crash durante l'esecuzione",
+          "ACCEPT": "La tua soluzione è stata accettata. Ottimo lavoro!"
+        }
       },
       "connection": {
         "success": "Connesso con successo",

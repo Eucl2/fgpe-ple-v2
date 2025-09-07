@@ -1,11 +1,39 @@
-import { CircularProgress } from "@chakra-ui/react";
+import { CircularProgress, Text, VStack } from "@chakra-ui/react";
 import styled from "@emotion/styled";
-import React from "react";
+import React, { useState, useEffect } from "react";
 
-const MainLoading = () => {
+interface MainLoadingProps {
+  message?: string;
+  showDots?: boolean;
+}
+
+const MainLoading: React.FC<MainLoadingProps> = ({ 
+  message = "Loading", 
+  showDots = true 
+}) => {
+  const [dots, setDots] = useState("");
+
+  useEffect(() => {
+    if (!showDots) return;
+    
+    const interval = setInterval(() => {
+      setDots(prev => {
+        if (prev === "...") return "";
+        return prev + ".";
+      });
+    }, 500);
+
+    return () => clearInterval(interval);
+  }, [showDots]);
+
   return (
     <Fullscreen>
-      <CircularProgress isIndeterminate color="blue.300" />
+      <VStack spacing={3}>
+        <CircularProgress isIndeterminate color="blue.300" />
+        <Text fontSize="md" color="gray.600">
+          {message}{showDots ? dots : ""}
+        </Text>
+      </VStack>
     </Fullscreen>
   );
 };

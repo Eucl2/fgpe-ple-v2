@@ -383,21 +383,44 @@ const EditorMenu = ({
             <Box width={3 / 4} textAlign="left">
               {t("playground.menu.status.status")}:
               {submissionResult ? (
-                <Badge
-                  m={1}
-                  colorScheme={getColorSchemeForSubmissionResult(
-                    submissionResult
-                  )}
-                  textOverflow="ellipsis"
-                  overflow="hidden"
-                  whiteSpace="nowrap"
-                  maxW="calc(100% - 100px)"
-                  data-cy="status"
-                >
-                  {connectionError
-                    ? t("playground.menu.status.CONNECTION_PROBLEM")
-                    : t(`playground.menu.status.${submissionResult}`)}
-                </Badge>
+                ['COMPILATION_ERROR', 'RUNTIME_ERROR', 'ACCEPT'].includes(submissionResult) ? (
+                  <Tooltip
+                    label={t(`playground.menu.status.tooltip.${submissionResult}`)}
+                    aria-label="Status tooltip"
+                    bg="gray.300"
+                    color="black"
+                    hasArrow
+                    openDelay={500}
+                  >
+                    <Badge
+                      m={1}
+                      colorScheme={getColorSchemeForSubmissionResult(submissionResult)}
+                      textOverflow="ellipsis"
+                      overflow="hidden"
+                      whiteSpace="nowrap"
+                      maxW="calc(100% - 100px)"
+                      data-cy="status"
+                    >
+                      {connectionError
+                        ? t("playground.menu.status.CONNECTION_PROBLEM")
+                        : t(`playground.menu.status.${submissionResult}`)}
+                    </Badge>
+                  </Tooltip>
+                ) : (
+                  <Badge
+                    m={1}
+                    colorScheme={getColorSchemeForSubmissionResult(submissionResult)}
+                    textOverflow="ellipsis"
+                    overflow="hidden"
+                    whiteSpace="nowrap"
+                    maxW="calc(100% - 100px)"
+                    data-cy="status"
+                  >
+                    {connectionError
+                      ? t("playground.menu.status.CONNECTION_PROBLEM")
+                      : t(`playground.menu.status.${submissionResult}`)}
+                  </Badge>
+                )
               ) : isWaitingForValidationResult ||
                 isWaitingForEvaluationResult ? (
                 <Spinner
@@ -442,16 +465,25 @@ const EditorMenu = ({
               </Tooltip>
             </Box>
             <Box width={1 / 4} alignItems="center" justifyContent="center">
-              <Button
-                colorScheme={solved ? "green" : "gray"}
-                size="sm"
-                w="95%"
-                fontSize={{ base: 12, lg: 14 }}
-                onClick={setNextUnsolvedExercise}
-                data-cy="next"
+              <Tooltip
+                label={t("playground.menu.nextTooltip")}
+                aria-label="Next exercise tooltip"
+                bg="gray.300"
+                color="black"
+                hasArrow
+                openDelay={500}
               >
-                {t("playground.menu.next")}
-              </Button>
+                <Button
+                  colorScheme={solved ? "green" : "gray"}
+                  size="sm"
+                  w="95%"
+                  fontSize={{ base: 12, lg: 14 }}
+                  onClick={setNextUnsolvedExercise}
+                  data-cy="next"
+                >
+                  {t("playground.menu.next")}
+                </Button>
+              </Tooltip>
             </Box>
           </Flex>
         </Center>

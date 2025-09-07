@@ -136,6 +136,7 @@
       "ready": "Gotowy",
       "next": "Dalej",
       "addTestValues": "Dodaj wartości testowe",
+      "nextTooltip": "Przejdź do następnego nierozwiązanego ćwiczenia",
       "status": {
         "status": "Status",
         "CONNECTION_PROBLEM": "PROBLEM Z POŁĄCZENIEM",
@@ -148,7 +149,12 @@
         "PROCESSING": "PRZETWARZANIE",
         "RESOURCE_USAGE_EXCEEDED": "PRZEKROCZONO ZASOBY",
         "TIMEOUT": "KONIEC CZASU",
-        "WRONG_ANSWER": "BŁĘDNA ODPOWIEDŹ"
+        "WRONG_ANSWER": "BŁĘDNA ODPOWIEDŹ",
+        "tooltip": {
+          "COMPILATION_ERROR": "Twój kod zawiera błędy składniowe, które uniemożliwiają jego uruchomienie",
+          "RUNTIME_ERROR": "Twój kod działa, ale zawiesza się podczas wykonywania",
+          "ACCEPT": "Twoje rozwiązanie zostało zaakceptowane. Dobra robota!"
+        }
       },
       "connection": {
         "success": "Połączono pomyślnie",
