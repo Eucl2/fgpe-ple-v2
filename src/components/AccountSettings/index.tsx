@@ -142,7 +142,7 @@ const AccountSettings = () => {
         <Button
           variant="outline"
           leftIcon={<ArrowBackIcon />}
-          onClick={() => history.push("/profile")}
+          onClick={() => history.goBack()}
         >
           {t("Back")}
         </Button>
