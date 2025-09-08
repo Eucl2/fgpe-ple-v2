@@ -23,7 +23,12 @@ import { ExerciseData } from "./ExerciseData";
 
 const DOCTYPE_HTML_STRING = "<!doctype html>";
 
-// TODO: Refactor alphabetical sorting, now it's copied multiple times
+const extractLanguageCode = (langTag: string): string => {
+  return langTag.split('">')[1].split("</")[0];
+};
+const sortLanguagesByCode = (a: string, b: string): number => {
+  return extractLanguageCode(a).localeCompare(extractLanguageCode(b));
+};
 
 const GET_LANGUAGES_FROM_A_TAG_MENU_REGEX = new RegExp(
   /(<a href="#)[\w.-]+(">)[\w.-]+(<\/a>)/g
@@ -142,12 +147,7 @@ return (
 
                   statementOrNoDescriptionMessage
                     .match(GET_LANGUAGES_FROM_A_TAG_MENU_REGEX)
-                    ?.sort((a: any, b: any) =>
-                      a
-                        .split('">')[1]
-                        .split("</")[0]
-                        .localeCompare(b.split('">')[1].split("</")[0])
-                    )
+                    ?.sort(sortLanguagesByCode)
                     .forEach((lang, i) => {
                       // console.log(
                       //   i18n.language.toLowerCase(),
@@ -187,12 +187,7 @@ return (
                 <TabList>
                   {statementOrNoDescriptionMessage
                     .match(GET_LANGUAGES_FROM_A_TAG_MENU_REGEX)
-                    ?.sort((a: any, b: any) =>
-                      a
-                        .split('">')[1]
-                        .split("</")[0]
-                        .localeCompare(b.split('">')[1].split("</")[0])
-                    )
+                    ?.sort(sortLanguagesByCode)
                     .map((lang, i) => {
                       const languageCode = lang.split('">')[1].split("</")[0];
 
@@ -230,7 +225,7 @@ return (
                         statement: statementLanguageVersion,
                       };
                     })
-                    .sort((a, b) => a.lang.localeCompare(b.lang))
+                    .sort((a, b) => extractLanguageCode(a.lang).localeCompare(extractLanguageCode(b.lang)))
                     .map((statementLanguageVersion, i) => {
                       const renderAsHTML =
                         statementLanguageVersion.statement
