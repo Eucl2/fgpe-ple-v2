@@ -5,6 +5,11 @@
     "title": "Tempo Scaduto!",
     "description": "Non sei stato abbastanza veloce! Ritenta la prossima volta!"
   },
+  "difficulty": {
+    "easy": "Facile",
+    "medium": "Medio",
+    "hard": "Difficile"
+  },
   "Change availability": "Cambia disponibilità",
   "Game profile": "Profilo del gioco",
   "Exercise": "Esercizio",

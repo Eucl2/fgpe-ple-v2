@@ -5,6 +5,11 @@
     "title": "Acabou o tempo!",
     "description": "Estavas a programar rápido, mas não o suficiente. Talvez na próxima vez!"
   },
+  "difficulty": {
+    "easy": "Fácil",
+    "medium": "Médio",
+    "hard": "Difícil"
+  },
   "Change availability": "Alterar disponibilidade",
   "Game profile": "Perfil de jogo",
   "Exercise": "Exercício",

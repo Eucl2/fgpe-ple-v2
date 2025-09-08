@@ -5,6 +5,11 @@
     "title": "Zeit ist um!",
     "description": "Du hast schnell programmiert, aber nicht schnell genug. Vielleicht beim nächsten Mal!"
   },
+  "difficulty": {
+    "easy": "Einfach",
+    "medium": "Mittel",
+    "hard": "Schwer"
+  },
   "Change availability": "Verfügbarkeit ändern",
   "Game profile": "Spielprofil",
   "Exercise": "Übung",

@@ -88,7 +88,7 @@ export const get_exercise_data = async (
         locked: false,
         mode: "NORMAL",
         modeParameters: {},
-        difficulty: "EASY"
+        difficulty: "MEDIUM"
       };
       return examplePythonExercise;
     }
@@ -109,7 +109,7 @@ export const get_exercise_data = async (
       locked: false,
       mode: "NORMAL",
       modeParameters: {},
-      difficulty: "EASY"
+      difficulty: "HARD"
     };
     return examplePythonExercise;
   }

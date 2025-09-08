@@ -14,6 +14,11 @@
     "title": "Czas minął!",
     "description": "Było szybko, ale trochę brakowało. Może następnym razem!"
   },
+  "difficulty": {
+    "easy": "Łatwy",
+    "medium": "Średni",
+    "hard": "Trudny"
+  },
   "Change availability": "Zmień dostępność",
   "Number of validations": "Liczba walidacji",
   "Number of submissions": "Liczba ewaluacji",

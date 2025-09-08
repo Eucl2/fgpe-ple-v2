@@ -5,6 +5,11 @@
     "title": "¡El tiempo ha terminado!",
     "description": "Estabas codificando rápido, pero no lo suficiente. ¡Quizás la próxima vez!"
   },
+  "difficulty": {
+    "easy": "Fácil",
+    "medium": "Medio",
+    "hard": "Difícil"
+  },
   "Change availability": "Cambiar disponibilidad",
   "Game profile": "Perfil de juego",
   "Exercise": "Ejercicio",

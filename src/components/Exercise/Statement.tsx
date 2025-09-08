@@ -9,6 +9,8 @@ import {
   Tabs,
   useColorMode,
   Badge,
+  HStack,
+  Progress,
 } from "@chakra-ui/react";
 import styled from "@emotion/styled";
 import React from "react";
@@ -51,24 +53,41 @@ return (
   <>
     {exerciseData?.difficulty && (
       <Box px={5} pt={3}>
-        <Badge
-          px={2}
-          py={1}
-          borderRadius="md"
-          backgroundColor={
-            exerciseData.difficulty.toLowerCase() === "easy" ? "green.100" :
-            exerciseData.difficulty.toLowerCase() === "medium" ? "yellow.100" : 
-            "red.100"
-          }
-          color={
-            exerciseData.difficulty.toLowerCase() === "easy" ? "green.800" :
-            exerciseData.difficulty.toLowerCase() === "medium" ? "yellow.800" : 
-            "red.800"
-          }
-          fontSize="md"
-        >
-          {exerciseData.difficulty}
-        </Badge>
+        <HStack spacing={3} align="center">
+          <Badge 
+            bgGradient={
+              exerciseData.difficulty.toLowerCase() === 'easy' ? "linear(to-r, green.400, green.600)" :
+              exerciseData.difficulty.toLowerCase() === 'medium' ? "linear(to-r, orange.400, orange.600)" :
+              "linear(to-r, red.400, red.600)"
+            }
+            color="white"
+            px={3}
+            py={1}
+            borderRadius="full"
+            fontSize="xs"
+            fontWeight="bold"
+            minW="60px"
+            textAlign="center"
+            textTransform="capitalize"
+          >
+            {t(`difficulty.${exerciseData.difficulty.toLowerCase()}`)}
+          </Badge>
+          
+          <Progress 
+            value={
+              exerciseData.difficulty.toLowerCase() === 'easy' ? 33 : 
+              exerciseData.difficulty.toLowerCase() === 'medium' ? 66 : 100
+            }
+            colorScheme={
+              exerciseData.difficulty.toLowerCase() === 'easy' ? "green" :
+              exerciseData.difficulty.toLowerCase() === 'medium' ? "orange" : 
+              "red"
+            }
+            size="sm" 
+            width="60px"
+            borderRadius="full"
+          />
+        </HStack>
       </Box>
     )}
     <ScrollbarWrapper>

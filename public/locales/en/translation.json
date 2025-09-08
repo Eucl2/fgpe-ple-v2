@@ -12,6 +12,11 @@
     "title": "Time is up!",
     "description": "You were coding fast, but not fast enough. Maybe next time!"
   },
+  "difficulty": {
+    "easy": "Easy",
+    "medium": "Medium", 
+    "hard": "Hard"
+  },
   "Change availability": "Change availability",
   "Game profile": "Game profile",
   "Exercise": "Exercise",
