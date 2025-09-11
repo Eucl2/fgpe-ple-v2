@@ -1,9 +1,3 @@
-// workaround to hide the React error overlay in development mode.
-if (window.location.hostname === 'localhost') {
-  const style = document.createElement('style');
-  style.innerHTML = '#webpack-dev-server-client-overlay { display: none !important; }';
-  document.head.appendChild(style);
-}
 import {
   ApolloClient,
   ApolloProvider,
@@ -35,6 +29,13 @@ import { persistCache, LocalStorageWrapper } from "apollo3-cache-persist";
 import * as serviceWorkerRegistration from "./service-worker-registration";
 import { restoreTokens, storeTokens } from "./utilities/Storage";
 import { useTranslation } from "react-i18next";
+
+// workaround to hide the React error overlay in development mode.
+if (window.location.hostname === 'localhost') {
+  const style = document.createElement('style');
+  style.innerHTML = '#webpack-dev-server-client-overlay { display: none !important; }';
+  document.head.appendChild(style);
+}
 
 ClearLocalStorage();
 
