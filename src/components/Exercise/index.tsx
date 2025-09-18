@@ -130,6 +130,7 @@ const Exercise = ({
     useState(false);
   const [isWaitingForValidationResult, setWaitingForValidationResult] =
     useState(false);
+  const [isWasmLoading, setIsWasmLoading] = useState(false);
 
   const [connectionProblem, setConnectionProblem] = useState(false);
 
@@ -149,13 +150,6 @@ const Exercise = ({
   // Added to use with local code interpreters like Skulpt (Python)
   const stopExecution = useRef(false);
   const additionalOutputs = useRef<string[]>([]);
-
-  useEffect(() => {
-    // %Load WASM module
-    loadWasmModule().catch(err => {
-      console.error("Failed to load WASM module:", err);
-    });
-  }, []);
 
   useEffect(() => {
     if (exerciseData) {
@@ -419,6 +413,15 @@ const evaluateSubmission = async (isSpotBugMode?: boolean) => {
     
     // Use different execution based on language
     if (activeLanguage.name?.substring(0, 6).toLowerCase() === "python" && isSkulptEnabled) {
+      try {
+        await loadWasmModule();
+      } catch (err) {
+        console.error("Failed to load WASM module:", err);
+        setSubmissionResult(Result.RUNTIME_ERROR);
+        setSubmissionFeedback("Failed to initialize code execution environment");
+        setWaitingForEvaluationResult(false);
+        return;
+      }
       // Python with Skulpt
       let errors: { content: string; index: number }[] = [];
       
@@ -532,6 +535,30 @@ const evaluateSubmission = async (isSpotBugMode?: boolean) => {
 };
   const validateSubmission = async () => {
     clearPlayground(true);
+    setIsWasmLoading(true);
+
+    try {
+      await loadWasmModule();
+    } catch (err) {
+      console.error("Failed to load WASM module:", err);
+      addNotification({
+        title: "Initialization Error",
+        description: "Failed to load code execution environment",
+        status: "error",
+      });
+      setIsWasmLoading(false);
+      return;
+    }
+    setIsWasmLoading(false);
+    
+    if (!exerciseData) {
+      addNotification({
+        title: t("error.unknownProblem.title"),
+        description: "Exercise data not available",
+        status: "error",
+      });
+      return;
+    }
     
     if (!exerciseData) {
       addNotification({

@@ -204,7 +204,7 @@ const Challenge = () => {
   } = useQuery<getActivityById>(GET_ACTIVITY_BY_ID, {
     skip: !activeExercise?.activity?.id,
     variables: { gameId, activityId: activeExercise?.activity?.id },
-    fetchPolicy: "no-cache",
+    fetchPolicy: "cache-first",
     onCompleted: () => {
       console.log("ACTIVITY READY");
     },
@@ -216,7 +216,7 @@ const Challenge = () => {
     loading: challengeLoading,
     refetch: challengeRefetch,
   } = useQuery<FindChallenge>(FIND_CHALLENGE, {
-    fetchPolicy: "no-cache",
+    fetchPolicy: "cache-first",
     variables: { gameId, challengeId },
     onCompleted: (data) => {
       if (exerciseId) {
@@ -239,13 +239,23 @@ const Challenge = () => {
   // Effect to fetch exercise data when challenge data is loaded
   useEffect(() => {
     if (challengeData && !challengeLoading) {
-      challengeData.myChallengeStatus.refs.forEach(exercise => {
-        if (exercise.activity?.id) {
-          fetchExerciseData(exercise.activity.id);
-        }
-      });
+      const exercises = challengeData.myChallengeStatus.refs;
+      
+      // Load active exercise first
+      if (activeExercise?.activity?.id) {
+        console.log("Loading active exercise first:", activeExercise.activity.id);
+        fetchExerciseData(activeExercise.activity.id);
+      }
+      setTimeout(() => {
+        console.log("Loading remaining exercises...");
+        exercises.forEach(exercise => {
+          if (exercise.activity?.id && exercise.activity.id !== activeExercise?.activity?.id) {
+            fetchExerciseData(exercise.activity.id);
+          }
+        });
+      }, 500);
     }
-  }, [challengeData, challengeLoading]);
+  }, [challengeData, challengeLoading, activeExercise]);
 
   const checkIfSolved = (
     challengeData: FindChallenge,
