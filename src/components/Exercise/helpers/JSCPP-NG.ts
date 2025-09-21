@@ -125,21 +125,17 @@ export function runCpp({
   function prepareLaunchRuntime(source: string, input: InputFunction | undefined, config: JSCPPConfig, disableStopExecutionFlag: boolean): void {
     errorOccured = false;
 
-    try {
-      if (disableStopExecutionFlag) {
-        stopExecution.current = false;
-      }
-      JSCPP.run(source, input ?? function() { throw new Error("Input is not given") }, config);
-    } catch (error) {
-      onError((error as Error).message);
+    if (disableStopExecutionFlag) {
+      stopExecution.current = false;
     }
+    JSCPP.run(source, input ?? function() { throw new Error("Input is not given") }, config);
   }
 
   const runit = function(source: string) {
     const msStart = Date.now();
     const config: JSCPPConfig = {
       fstream,
-      includes: undefined, // TODO: fix
+      includes: {}, // TODO: fix
       loadedLibraries: [],
       stdio: {
         finishCallback: function(exitCode: number) {
@@ -148,7 +144,7 @@ export function runCpp({
           //hideProgress();
         },
         promiseError: function(promise_error) {
-          onError(promise_error.message);
+          throw promise_error;
         },
         write: function(s) {
           setOutput(s);

@@ -369,6 +369,7 @@ const Exercise = ({
 
   const evaluateSubmission = async (isSpotBugMode?: boolean) => {
     clearPlayground();
+    console.log("evaluateSubmission");
 
     if (!exerciseData) {
       addNotification({
@@ -408,245 +409,247 @@ const Exercise = ({
         return;
       }
 
-    //run test code
-    const fullCode = `${exerciseData.precode}\n\n${code}\n\n${exerciseData.postcode}\n\n${exerciseData.testcode}`;
-    additionalOutputs.current = [];
+      //run test code
+      const fullCode = `${exerciseData.precode}\n\n${code}\n\n${exerciseData.postcode}\n\n${exerciseData.testcode}`;
+      additionalOutputs.current = [];
 
-    // Use different execution based on language
-    console.log("activeLanguage", activeLanguage);
+      // Use different execution based on language
+      console.log("activeLanguage", activeLanguage);
 
-    if (activeLanguage.name?.substring(0, 6).toLowerCase() === "python" && isSkulptEnabled) {
-      try {
-        await loadWasmModule();
-      } catch (err) {
-        console.error("Failed to load WASM module:", err);
-        setSubmissionResult(Result.RUNTIME_ERROR);
-        setSubmissionFeedback("Failed to initialize code execution environment");
-        setWaitingForEvaluationResult(false);
-        return;
-      }
-      // Python with Skulpt
-      let errors: { content: string; index: number }[] = [];
+      if (activeLanguage.name?.substring(0, 6).toLowerCase() === "python" && isSkulptEnabled) {
+          
+        try {
+          await loadWasmModule();
+        } catch (err) {
+          console.error("Failed to load WASM module:", err);
+          setSubmissionResult(Result.RUNTIME_ERROR);
+          setSubmissionFeedback("Failed to initialize code execution environment");
+          setWaitingForEvaluationResult(false);
+          return;
+        }
+        // Python with Skulpt
+        let errors: { content: string; index: number }[] = [];
 
-      await new Promise((resolve) => {
-        runPython({
-          code: fullCode,
-          setLoading: setWaitingForEvaluationResult,
-          setOutput: (v: string) => {
-            additionalOutputs.current = [...additionalOutputs.current, v];
-          },
-          setResult: (v: Result) => {
-            setSubmissionResult(v);
-          },
-          stopExecution,
-          getInput: () => undefined,
-          onFinish: () => { },
-          onSuccess: () => {
-            setSubmissionResult(Result.ACCEPT);
-            setSubmissionFeedback("All tests passed!");
-            setValidationOutputs(additionalOutputs.current);
+        await new Promise((resolve) => {
+          runPython({
+            code: fullCode,
+            setLoading: setWaitingForEvaluationResult,
+            setOutput: (v: string) => {
+              additionalOutputs.current = [...additionalOutputs.current, v];
+            },
+            setResult: (v: Result) => {
+              setSubmissionResult(v);
+            },
+            stopExecution,
+            getInput: () => undefined,
+            onFinish: () => { },
+            onSuccess: () => {
+              setSubmissionResult(Result.ACCEPT);
+              setSubmissionFeedback("All tests passed!");
+              setValidationOutputs(additionalOutputs.current);
 
-            try {
-              console.log("Debug - keycloak.profile:", keycloak.profile);
-              console.log("Debug - activity?.id:", activity?.id);
-              console.log("Debug - gameId:", gameId);
-              console.log("Debug - Numbers:", {
-                playerId: Number(keycloak.profile?.id || "1"),
-                exerciseId: Number(activity?.id || "1"),
-                gameId: Number(gameId || "1")
-              });
-              const eventData = {
-                eventType: "submit",
-                eventResult: 100,
-                playerId: stringToNumber(keycloak.profile?.id || "1"),
-                exerciseId: stringToNumber(activity?.id || "1"),
-                gameId: stringToNumber(gameId || "1")
-              };
+              try {
+                console.log("Debug - keycloak.profile:", keycloak.profile);
+                console.log("Debug - activity?.id:", activity?.id);
+                console.log("Debug - gameId:", gameId);
+                console.log("Debug - Numbers:", {
+                  playerId: Number(keycloak.profile?.id || "1"),
+                  exerciseId: Number(activity?.id || "1"),
+                  gameId: Number(gameId || "1")
+                });
+                const eventData = {
+                  eventType: "submit",
+                  eventResult: 100,
+                  playerId: stringToNumber(keycloak.profile?.id || "1"),
+                  exerciseId: stringToNumber(activity?.id || "1"),
+                  gameId: stringToNumber(gameId || "1")
+                };
 
-              console.log("Sending event to WASM:", eventData);
+                console.log("Sending event to WASM:", eventData);
 
-              processGameEvent(eventData).then(gameResult => {
-                console.log("Processing WASM gameResult:", gameResult);
+                processGameEvent(eventData).then(gameResult => {
+                  console.log("Processing WASM gameResult:", gameResult);
 
-                let notificationShown = false;
+                  let notificationShown = false;
 
-                if (gameResult && gameResult.results && Array.isArray(gameResult.results) && gameResult.results.length > 0) {
-                  gameResult.results.forEach((result: any) => {
-                    if (Array.isArray(result) && result.length >= 2 && result[0] === "Message") {
-                      if (Array.isArray(result[1]) && result[1].length > 0) {
-                        addNotification({
-                          title: "Achievement",
-                          description: result[1][0],
-                          status: "success",
-                        });
-                        notificationShown = true;
+                  if (gameResult && gameResult.results && Array.isArray(gameResult.results) && gameResult.results.length > 0) {
+                    gameResult.results.forEach((result: any) => {
+                      if (Array.isArray(result) && result.length >= 2 && result[0] === "Message") {
+                        if (Array.isArray(result[1]) && result[1].length > 0) {
+                          addNotification({
+                            title: "Achievement",
+                            description: result[1][0],
+                            status: "success",
+                          });
+                          notificationShown = true;
+                        }
                       }
-                    }
-                  });
-                }
+                    });
+                  }
 
-                // If no notification shown but game state was updated, shows a fallback notification
-                if (!notificationShown && gameResult && gameResult.game_state) {
-                  addNotification({
-                    title: t("playground.feedback.solutionAccepted.title"),
-                    description: t("playground.feedback.solutionAccepted.description"),
-                    status: "success",
-                  });
-                }
-              }).catch(wasmError => {
+                  // If no notification shown but game state was updated, shows a fallback notification
+                  if (!notificationShown && gameResult && gameResult.game_state) {
+                    addNotification({
+                      title: t("playground.feedback.solutionAccepted.title"),
+                      description: t("playground.feedback.solutionAccepted.description"),
+                      status: "success",
+                    });
+                  }
+                }).catch(wasmError => {
+                  console.error("WASM processing error:", wasmError);
+                });
+              } catch (wasmError) {
                 console.error("WASM processing error:", wasmError);
+              }
+
+              resolve(true);
+            },
+            onError: (err: string) => {
+              errors.push({
+                content: err,
+                index: 0,
               });
-            } catch (wasmError) {
-              console.error("WASM processing error:", wasmError);
-            }
 
-            resolve(true);
-          },
-          onError: (err: string) => {
-            errors.push({
-              content: err,
-              index: 0,
-            });
-
-            setSubmissionFeedback(err);
-            setSubmissionResult(Result.RUNTIME_ERROR);
-            setValidationOutputs(additionalOutputs.current);
-            resolve(true);
-          },
+              setSubmissionFeedback(err);
+              setSubmissionResult(Result.RUNTIME_ERROR);
+              setValidationOutputs(additionalOutputs.current);
+              resolve(true);
+            },
+          });
         });
-      });
-    } else if (activeLanguage.id?.toUpperCase() === "C" || activeLanguage.id?.toUpperCase() === "C++") {
-      try {
-        await loadWasmModule();
-      } catch (err) {
-        console.error("Failed to load WASM module:", err);
-        setSubmissionResult(Result.RUNTIME_ERROR);
-        setSubmissionFeedback("Failed to initialize code execution environment");
-        setWaitingForEvaluationResult(false);
-        return;
-      }
-      // JSCPP-NG for C/C++
-      let errors: { content: string; index: number }[] = [];
-      // fullText : string
-      // setWaitingForEvaluationResult: Dispatch<SetStateAction<boolean>>
-      // setSubmissionResult: (value: SetStateAction<Result | null>) => void
-      // setSubmissionFeedback: (value: SetStateAction<string>) => void
-      // setWaitingForEvaluationResult: (value: SetStateAction<boolean>) => void
-      // setValidationOutputs: (value: string[]) => void
-      // stopExecution: { current: boolean }
-      // additionalOutputs: MutableRefObject<string[]>
-      await new Promise((resolve) => {
-        runCpp({
-          code: fullCode,
-          setLoading: setWaitingForEvaluationResult,
-          setOutput: (v: string) => {
-            additionalOutputs.current = [...additionalOutputs.current, v];
-          },
-          setResult: (v: Result) => {
-            setSubmissionResult(v);
-          },
-          stopExecution,
-          getInput: undefined,
-          addFile: () => { throw new Error("addFile: Not yet implemented"); },
-          onFinish: () => { },
-          onSuccess: () => {
-            setSubmissionResult(Result.ACCEPT);
-            setSubmissionFeedback("All tests passed!");
-            setValidationOutputs(additionalOutputs.current);
+      } else if (activeLanguage.id?.toUpperCase() === "C" || activeLanguage.id?.toUpperCase() === "CPP") {
+        try {
+          await loadWasmModule();
+        } catch (err) {
+          console.error("Failed to load WASM module:", err);
+          setSubmissionResult(Result.RUNTIME_ERROR);
+          setSubmissionFeedback("Failed to initialize code execution environment");
+          setWaitingForEvaluationResult(false);
+          return;
+        }
+        // JSCPP-NG for C/C++
+        let errors: { content: string; index: number }[] = [];
+        // fullText : string
+        // setWaitingForEvaluationResult: Dispatch<SetStateAction<boolean>>
+        // setSubmissionResult: (value: SetStateAction<Result | null>) => void
+        // setSubmissionFeedback: (value: SetStateAction<string>) => void
+        // setWaitingForEvaluationResult: (value: SetStateAction<boolean>) => void
+        // setValidationOutputs: (value: string[]) => void
+        // stopExecution: { current: boolean }
+        // additionalOutputs: MutableRefObject<string[]>
+        await new Promise((resolve) => {
+          runCpp({
+            code: code,
+            setLoading: setWaitingForEvaluationResult,
+            setOutput: (v: string) => {
+              additionalOutputs.current = [...additionalOutputs.current, v];
+            },
+            setResult: (v: Result) => {
+              setSubmissionResult(v);
+            },
+            stopExecution,
+            getInput: undefined,
+            addFile: () => { throw new Error("addFile: Not yet implemented"); },
+            onFinish: () => { },
+            onSuccess: () => {
+              setSubmissionResult(Result.ACCEPT);
+              setSubmissionFeedback("All tests passed!");
+              setValidationOutputs(additionalOutputs.current);
 
-            try {
-              console.log("Debug - keycloak.profile:", keycloak.profile);
-              console.log("Debug - activity?.id:", activity?.id);
-              console.log("Debug - gameId:", gameId);
-              console.log("Debug - Numbers:", {
-                playerId: Number(keycloak.profile?.id || "1"),
-                exerciseId: Number(activity?.id || "1"),
-                gameId: Number(gameId || "1")
-              });
-              const eventData = {
-                eventType: "submit",
-                eventResult: 100,
-                playerId: stringToNumber(keycloak.profile?.id || "1"),
-                exerciseId: stringToNumber(activity?.id || "1"),
-                gameId: stringToNumber(gameId || "1")
-              };
+              try {
+                console.log("Debug - keycloak.profile:", keycloak.profile);
+                console.log("Debug - activity?.id:", activity?.id);
+                console.log("Debug - gameId:", gameId);
+                console.log("Debug - Numbers:", {
+                  playerId: Number(keycloak.profile?.id || "1"),
+                  exerciseId: Number(activity?.id || "1"),
+                  gameId: Number(gameId || "1")
+                });
+                const eventData = {
+                  eventType: "submit",
+                  eventResult: 100,
+                  playerId: stringToNumber(keycloak.profile?.id || "1"),
+                  exerciseId: stringToNumber(activity?.id || "1"),
+                  gameId: stringToNumber(gameId || "1")
+                };
 
-              console.log("Sending event to WASM:", eventData);
+                console.log("Sending event to WASM:", eventData);
 
-              processGameEvent(eventData).then(gameResult => {
-                console.log("Processing WASM gameResult:", gameResult);
+                processGameEvent(eventData).then(gameResult => {
+                  console.log("Processing WASM gameResult:", gameResult);
 
-                let notificationShown = false;
+                  let notificationShown = false;
 
-                if (gameResult && gameResult.results && Array.isArray(gameResult.results) && gameResult.results.length > 0) {
-                  gameResult.results.forEach((result: any) => {
-                    if (Array.isArray(result) && result.length >= 2 && result[0] === "Message") {
-                      if (Array.isArray(result[1]) && result[1].length > 0) {
-                        addNotification({
-                          title: "Achievement",
-                          description: result[1][0],
-                          status: "success",
-                        });
-                        notificationShown = true;
+                  if (gameResult && gameResult.results && Array.isArray(gameResult.results) && gameResult.results.length > 0) {
+                    gameResult.results.forEach((result: any) => {
+                      if (Array.isArray(result) && result.length >= 2 && result[0] === "Message") {
+                        if (Array.isArray(result[1]) && result[1].length > 0) {
+                          addNotification({
+                            title: "Achievement",
+                            description: result[1][0],
+                            status: "success",
+                          });
+                          notificationShown = true;
+                        }
                       }
-                    }
-                  });
-                }
+                    });
+                  }
 
-                // If no notification shown but game state was updated, shows a fallback notification
-                if (!notificationShown && gameResult && gameResult.game_state) {
-                  addNotification({
-                    title: t("playground.feedback.solutionAccepted.title"),
-                    description: t("playground.feedback.solutionAccepted.description"),
-                    status: "success",
-                  });
-                }
-              }).catch(wasmError => {
+                  // If no notification shown but game state was updated, shows a fallback notification
+                  if (!notificationShown && gameResult && gameResult.game_state) {
+                    addNotification({
+                      title: t("playground.feedback.solutionAccepted.title"),
+                      description: t("playground.feedback.solutionAccepted.description"),
+                      status: "success",
+                    });
+                  }
+                }).catch(wasmError => {
+                  console.error("WASM processing error:", wasmError);
+                });
+              } catch (wasmError) {
                 console.error("WASM processing error:", wasmError);
+              }
+
+              resolve(true);
+            },
+            onError: (err: string) => {
+              errors.push({
+                content: err,
+                index: 0,
               });
-            } catch (wasmError) {
-              console.error("WASM processing error:", wasmError);
-            }
 
-            resolve(true);
-          },
-          onError: (err: string) => {
-            errors.push({
-              content: err,
-              index: 0,
-            });
-
-            setSubmissionFeedback(err);
-            setSubmissionResult(Result.RUNTIME_ERROR);
-            setValidationOutputs(additionalOutputs.current);
-            resolve(true);
-          },
+              setSubmissionFeedback(err);
+              setSubmissionResult(Result.RUNTIME_ERROR);
+              setValidationOutputs(additionalOutputs.current);
+              resolve(true);
+            },
+          });
         });
-      });
-    } else {
-      // For non-Python languages or when skulpt is disabled
-      setSubmissionFeedback("This language is not supported for in-browser execution yet");
-      setSubmissionResult(Result.WRONG_ANSWER);
-      setValidationOutputs(null);
+      } else {
+        // For non-Python languages or when skulpt is disabled
+        setSubmissionFeedback("This language is not supported for in-browser execution yet");
+        setSubmissionResult(Result.WRONG_ANSWER);
+        setValidationOutputs(null);
+      }
+
+      saveSubmissionDataInLocalStorage(
+        submissionFeedback,
+        submissionResult,
+        false,
+        validationOutputs
+      );
+    } catch (error) {
+      console.error("Error during evaluation:", error);
+      setSubmissionFeedback("An error occurred during evaluation");
+      setSubmissionResult(Result.RUNTIME_ERROR);
+    } finally {
+      setWaitingForEvaluationResult(false);
     }
-    
-    saveSubmissionDataInLocalStorage(
-      submissionFeedback,
-      submissionResult,
-      false,
-      validationOutputs
-    );    
-  } catch (error) {
-    console.error("Error during evaluation:", error);
-    setSubmissionFeedback("An error occurred during evaluation");
-    setSubmissionResult(Result.RUNTIME_ERROR);
-  } finally {
-    setWaitingForEvaluationResult(false);
-  }
-};
+  };
   const validateSubmission = async () => {
     clearPlayground(true);
     setIsWasmLoading(true);
+    console.log("validateSubmission");
 
     try {
       await loadWasmModule();
@@ -771,6 +774,77 @@ const Exercise = ({
             additionalOutputs.current
           );
         }
+      } else if (activeLanguage.id?.toUpperCase() === "C" || activeLanguage.id?.toUpperCase() === "CPP") {
+        // JSCPP-NG for C/C++
+        let errors: { content: string; index: number }[] = [];
+        // fullText : string
+        // setWaitingForEvaluationResult: Dispatch<SetStateAction<boolean>>
+        // setSubmissionResult: (value: SetStateAction<Result | null>) => void
+        // setSubmissionFeedback: (value: SetStateAction<string>) => void
+        // setWaitingForEvaluationResult: (value: SetStateAction<boolean>) => void
+        // setValidationOutputs: (value: string[]) => void
+        // stopExecution: { current: boolean }
+        // additionalOutputs: MutableRefObject<string[]>
+
+        for (let i = 0; i < testValues.length; i++) {
+          await new Promise((resolve) => {
+            const testValue = testValues[i];
+            const testValueSplitted = testValue.split("\n");
+            let inputFunN = 0;
+            runCpp({
+              code: code,
+              setLoading: setWaitingForEvaluationResult,
+              setOutput: (v: string) => {
+                additionalOutputs.current = [...additionalOutputs.current, v];
+              },
+              setResult: (v: Result) => {
+                setSubmissionResult(v);
+              },
+              stopExecution,
+              getInput: () => {
+                return new Promise((resolve, reject) => {
+                  const nextInput = testValueSplitted[inputFunN] ?? reject("End of input");
+                  inputFunN++;
+                  resolve(nextInput);
+                });
+              },
+              addFile: () => { throw new Error("addFile: Not yet implemented"); },
+              onFinish: () => { },
+              onSuccess: () => {
+                setValidationOutputs(additionalOutputs.current);
+                setSubmissionFeedback("");
+                setSubmissionResult(null);
+
+                saveSubmissionDataInLocalStorage(
+                  "",
+                  null,
+                  true,
+                  additionalOutputs.current
+                );
+
+                resolve(true);
+              },
+              onError: (err: string) => {
+                errors.push({
+                  content: err,
+                  index: i,
+                });
+
+                setSubmissionFeedback(err);
+                setSubmissionResult(Result.RUNTIME_ERROR);
+
+                saveSubmissionDataInLocalStorage(
+                  err,
+                  Result.RUNTIME_ERROR,
+                  true,
+                  null
+                );
+
+                resolve(true);
+              },
+            });
+          });
+        }
       } else {
         // For non-Python languages or when Skulpt is disabled
         setSubmissionFeedback("This language is not supported for in-browser execution yet");
@@ -816,9 +890,9 @@ const Exercise = ({
       <Box width={"100%"} height={"100%"} m={0} p={0}>
         <Box position="relative">
           <Skeleton isLoaded={!isLoading && !isExerciseDataLoading}>
-            <Statement 
-              activity={activity} 
-              gameId={gameId} 
+            <Statement
+              activity={activity}
+              gameId={gameId}
               exerciseData={exerciseData}
             />
           </Skeleton>
