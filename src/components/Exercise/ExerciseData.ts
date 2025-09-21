@@ -22,8 +22,8 @@ export const get_exercise_data = async (
   console.log(`Starting API call for exercise: ${exerciseId} in game: ${gameId}`);
   
   try {
-    // const apiUrl = `${process.env.REACT_APP_API_URI || 'http://127.0.0.1:3000'}/get_exercise_data`; //to change later
-    const apiUrl = `${'http://127.0.0.1:3000'}/get_exercise_data`; //Hardcoded for testing
+    // const apiUrl = `${process.env.REACT_APP_API_URI || 'http://127.0.0.1:3006'}/get_exercise_data`; //to change later
+    const apiUrl = `${'http://127.0.0.1:3006'}/get_exercise_data`; //Hardcoded for testing
     console.log(`API URL: ${apiUrl}`);
     
     const requestBody = {

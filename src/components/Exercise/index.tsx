@@ -27,6 +27,7 @@ import { SettingsContext } from "./SettingsContext";
 import Statement, { getStatementHeight } from "./Statement";
 import Terminal from "./Terminal";
 import { executeCheckSource, ExerciseData } from "./ExerciseData";
+import { runCpp } from './helpers/JSCPP-NG';
 
 const isEditorKindSpotBug = (activity?: getActivityById_activity | null) => {
   if (!activity) {
@@ -179,7 +180,7 @@ const Exercise = ({
       }
       return exerciseData.initcode;
     }
-    
+
     // Fallback to original method
     if (activity) {
       if (activity?.codeSkeletons) {
@@ -366,52 +367,54 @@ const Exercise = ({
     }
   };
 
-const evaluateSubmission = async (isSpotBugMode?: boolean) => {
-  clearPlayground();
-  
-  if (!exerciseData) {
-    addNotification({
-      title: t("error.unknownProblem.title"),
-      description: "Exercise data not available",
-      status: "error",
-    });
-    return;
-  }
-  
-  if (!code) {
-    addNotification({
-      title: t("playground.feedback.noCode.title"),
-      description: t("playground.feedback.noCode.description"),
-      status: "warning",
-    });
-    return;
-  }
-  
-  setWaitingForEvaluationResult(true);
-  
-  try {
-    //run checksource to verify if solution meets requirements
-    const checksourceResult = await executeCheckSource(code, exerciseData.checksource);
-    
-    if (checksourceResult !== 'OK') {
-      setSubmissionFeedback(checksourceResult);
-      setSubmissionResult(Result.COMPILATION_ERROR);
-      setWaitingForEvaluationResult(false);
-      
-      saveSubmissionDataInLocalStorage(
-        checksourceResult,
-        Result.COMPILATION_ERROR,
-        false,
-        null
-      );
+  const evaluateSubmission = async (isSpotBugMode?: boolean) => {
+    clearPlayground();
+
+    if (!exerciseData) {
+      addNotification({
+        title: t("error.unknownProblem.title"),
+        description: "Exercise data not available",
+        status: "error",
+      });
       return;
     }
-    
+
+    if (!code) {
+      addNotification({
+        title: t("playground.feedback.noCode.title"),
+        description: t("playground.feedback.noCode.description"),
+        status: "warning",
+      });
+      return;
+    }
+
+    setWaitingForEvaluationResult(true);
+
+    try {
+      //run checksource to verify if solution meets requirements
+      const checksourceResult = await executeCheckSource(code, exerciseData.checksource);
+
+      if (checksourceResult !== 'OK') {
+        setSubmissionFeedback(checksourceResult);
+        setSubmissionResult(Result.COMPILATION_ERROR);
+        setWaitingForEvaluationResult(false);
+
+        saveSubmissionDataInLocalStorage(
+          checksourceResult,
+          Result.COMPILATION_ERROR,
+          false,
+          null
+        );
+        return;
+      }
+
     //run test code
     const fullCode = `${exerciseData.precode}\n\n${code}\n\n${exerciseData.postcode}\n\n${exerciseData.testcode}`;
     additionalOutputs.current = [];
-    
+
     // Use different execution based on language
+    console.log("activeLanguage", activeLanguage);
+
     if (activeLanguage.name?.substring(0, 6).toLowerCase() === "python" && isSkulptEnabled) {
       try {
         await loadWasmModule();
@@ -424,7 +427,7 @@ const evaluateSubmission = async (isSpotBugMode?: boolean) => {
       }
       // Python with Skulpt
       let errors: { content: string; index: number }[] = [];
-      
+
       await new Promise((resolve) => {
         runPython({
           code: fullCode,
@@ -437,12 +440,12 @@ const evaluateSubmission = async (isSpotBugMode?: boolean) => {
           },
           stopExecution,
           getInput: () => undefined,
-          onFinish: () => {},
+          onFinish: () => { },
           onSuccess: () => {
             setSubmissionResult(Result.ACCEPT);
             setSubmissionFeedback("All tests passed!");
             setValidationOutputs(additionalOutputs.current);
-            
+
             try {
               console.log("Debug - keycloak.profile:", keycloak.profile);
               console.log("Debug - activity?.id:", activity?.id);
@@ -459,14 +462,14 @@ const evaluateSubmission = async (isSpotBugMode?: boolean) => {
                 exerciseId: stringToNumber(activity?.id || "1"),
                 gameId: stringToNumber(gameId || "1")
               };
-              
+
               console.log("Sending event to WASM:", eventData);
-              
+
               processGameEvent(eventData).then(gameResult => {
                 console.log("Processing WASM gameResult:", gameResult);
-                
+
                 let notificationShown = false;
-                
+
                 if (gameResult && gameResult.results && Array.isArray(gameResult.results) && gameResult.results.length > 0) {
                   gameResult.results.forEach((result: any) => {
                     if (Array.isArray(result) && result.length >= 2 && result[0] === "Message") {
@@ -481,7 +484,7 @@ const evaluateSubmission = async (isSpotBugMode?: boolean) => {
                     }
                   });
                 }
-                
+
                 // If no notification shown but game state was updated, shows a fallback notification
                 if (!notificationShown && gameResult && gameResult.game_state) {
                   addNotification({
@@ -496,7 +499,7 @@ const evaluateSubmission = async (isSpotBugMode?: boolean) => {
             } catch (wasmError) {
               console.error("WASM processing error:", wasmError);
             }
-            
+
             resolve(true);
           },
           onError: (err: string) => {
@@ -504,7 +507,115 @@ const evaluateSubmission = async (isSpotBugMode?: boolean) => {
               content: err,
               index: 0,
             });
-            
+
+            setSubmissionFeedback(err);
+            setSubmissionResult(Result.RUNTIME_ERROR);
+            setValidationOutputs(additionalOutputs.current);
+            resolve(true);
+          },
+        });
+      });
+    } else if (activeLanguage.id?.toUpperCase() === "C" || activeLanguage.id?.toUpperCase() === "C++") {
+      try {
+        await loadWasmModule();
+      } catch (err) {
+        console.error("Failed to load WASM module:", err);
+        setSubmissionResult(Result.RUNTIME_ERROR);
+        setSubmissionFeedback("Failed to initialize code execution environment");
+        setWaitingForEvaluationResult(false);
+        return;
+      }
+      // JSCPP-NG for C/C++
+      let errors: { content: string; index: number }[] = [];
+      // fullText : string
+      // setWaitingForEvaluationResult: Dispatch<SetStateAction<boolean>>
+      // setSubmissionResult: (value: SetStateAction<Result | null>) => void
+      // setSubmissionFeedback: (value: SetStateAction<string>) => void
+      // setWaitingForEvaluationResult: (value: SetStateAction<boolean>) => void
+      // setValidationOutputs: (value: string[]) => void
+      // stopExecution: { current: boolean }
+      // additionalOutputs: MutableRefObject<string[]>
+      await new Promise((resolve) => {
+        runCpp({
+          code: fullCode,
+          setLoading: setWaitingForEvaluationResult,
+          setOutput: (v: string) => {
+            additionalOutputs.current = [...additionalOutputs.current, v];
+          },
+          setResult: (v: Result) => {
+            setSubmissionResult(v);
+          },
+          stopExecution,
+          getInput: undefined,
+          addFile: () => { throw new Error("addFile: Not yet implemented"); },
+          onFinish: () => { },
+          onSuccess: () => {
+            setSubmissionResult(Result.ACCEPT);
+            setSubmissionFeedback("All tests passed!");
+            setValidationOutputs(additionalOutputs.current);
+
+            try {
+              console.log("Debug - keycloak.profile:", keycloak.profile);
+              console.log("Debug - activity?.id:", activity?.id);
+              console.log("Debug - gameId:", gameId);
+              console.log("Debug - Numbers:", {
+                playerId: Number(keycloak.profile?.id || "1"),
+                exerciseId: Number(activity?.id || "1"),
+                gameId: Number(gameId || "1")
+              });
+              const eventData = {
+                eventType: "submit",
+                eventResult: 100,
+                playerId: stringToNumber(keycloak.profile?.id || "1"),
+                exerciseId: stringToNumber(activity?.id || "1"),
+                gameId: stringToNumber(gameId || "1")
+              };
+
+              console.log("Sending event to WASM:", eventData);
+
+              processGameEvent(eventData).then(gameResult => {
+                console.log("Processing WASM gameResult:", gameResult);
+
+                let notificationShown = false;
+
+                if (gameResult && gameResult.results && Array.isArray(gameResult.results) && gameResult.results.length > 0) {
+                  gameResult.results.forEach((result: any) => {
+                    if (Array.isArray(result) && result.length >= 2 && result[0] === "Message") {
+                      if (Array.isArray(result[1]) && result[1].length > 0) {
+                        addNotification({
+                          title: "Achievement",
+                          description: result[1][0],
+                          status: "success",
+                        });
+                        notificationShown = true;
+                      }
+                    }
+                  });
+                }
+
+                // If no notification shown but game state was updated, shows a fallback notification
+                if (!notificationShown && gameResult && gameResult.game_state) {
+                  addNotification({
+                    title: t("playground.feedback.solutionAccepted.title"),
+                    description: t("playground.feedback.solutionAccepted.description"),
+                    status: "success",
+                  });
+                }
+              }).catch(wasmError => {
+                console.error("WASM processing error:", wasmError);
+              });
+            } catch (wasmError) {
+              console.error("WASM processing error:", wasmError);
+            }
+
+            resolve(true);
+          },
+          onError: (err: string) => {
+            errors.push({
+              content: err,
+              index: 0,
+            });
+
             setSubmissionFeedback(err);
             setSubmissionResult(Result.RUNTIME_ERROR);
             setValidationOutputs(additionalOutputs.current);
@@ -550,7 +661,7 @@ const evaluateSubmission = async (isSpotBugMode?: boolean) => {
       return;
     }
     setIsWasmLoading(false);
-    
+
     if (!exerciseData) {
       addNotification({
         title: t("error.unknownProblem.title"),
@@ -559,7 +670,7 @@ const evaluateSubmission = async (isSpotBugMode?: boolean) => {
       });
       return;
     }
-    
+
     if (!exerciseData) {
       addNotification({
         title: t("error.unknownProblem.title"),
@@ -568,7 +679,7 @@ const evaluateSubmission = async (isSpotBugMode?: boolean) => {
       });
       return;
     }
-    
+
     if (!code) {
       addNotification({
         title: t("playground.feedback.noCode.title"),
@@ -577,23 +688,24 @@ const evaluateSubmission = async (isSpotBugMode?: boolean) => {
       });
       return;
     }
-    
+
     setWaitingForValidationResult(true);
     additionalOutputs.current = [];
-    
+
     try {
       // Combine precode, user code, and postcode
       const fullCode = `${exerciseData.precode}\n\n${code}\n\n${exerciseData.postcode}`;
-      
+      console.log("activeLanguage", activeLanguage);
+
       if (activeLanguage.name?.substring(0, 6).toLowerCase() === "python" && isSkulptEnabled) {
         let errors: { content: string; index: number }[] = [];
-        
+
         for (let i = 0; i < testValues.length; i++) {
           await new Promise((resolve) => {
             const testValue = testValues[i];
             const testValueSplitted = testValue.split("\n");
             let inputFunN = 0;
-            
+
             runPython({
               moreThanOneExecution: testValues.length > 1,
               getInput: () => {
@@ -610,19 +722,19 @@ const evaluateSubmission = async (isSpotBugMode?: boolean) => {
                 setSubmissionResult(v);
               },
               stopExecution,
-              onFinish: () => {},
+              onFinish: () => { },
               onSuccess: () => {
                 setValidationOutputs(additionalOutputs.current);
                 setSubmissionFeedback("");
                 setSubmissionResult(null);
-                
+
                 saveSubmissionDataInLocalStorage(
                   "",
                   null,
                   true,
                   additionalOutputs.current
                 );
-                
+
                 resolve(true);
               },
               onError: (err: string) => {
@@ -630,28 +742,28 @@ const evaluateSubmission = async (isSpotBugMode?: boolean) => {
                   content: err,
                   index: i,
                 });
-                
+
                 setSubmissionFeedback(err);
                 setSubmissionResult(Result.RUNTIME_ERROR);
-                
+
                 saveSubmissionDataInLocalStorage(
                   err,
                   Result.RUNTIME_ERROR,
                   true,
                   null
                 );
-                
+
                 resolve(true);
               },
             });
           });
         }
-        
+
         if (testValues.length > 1 && errors.length === 0) {
           setSubmissionResult(null);
           setValidationOutputs(additionalOutputs.current);
           setSubmissionFeedback("");
-          
+
           saveSubmissionDataInLocalStorage(
             "",
             null,
@@ -684,7 +796,7 @@ const evaluateSubmission = async (isSpotBugMode?: boolean) => {
     }
   };
 
-    const restoreLatestSubmissionOrValidation = () => {
+  const restoreLatestSubmissionOrValidation = () => {
     getAndSetLatestStateFromLocalStorageOrClear();
   };
 
