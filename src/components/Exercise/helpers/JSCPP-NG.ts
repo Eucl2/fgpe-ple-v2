@@ -37,7 +37,7 @@ export function runCpp({
     }
     (document.getElementById(obj.name) as any).value += stringToWrite.v;
   }
-
+ 
   function mFileOpen(obj: HTMLObjectElement) {
     if (obj.mode.v == "w") {
       filenameNode = document.getElementById(obj.name);
@@ -130,6 +130,7 @@ export function runCpp({
     }
     JSCPP.run(source, input ?? function() { throw new Error("Input is not given") }, config);
   }
+  let late_error: boolean = false;
 
   const runit = function(source: string) {
     const msStart = Date.now();
@@ -144,7 +145,18 @@ export function runCpp({
           //hideProgress();
         },
         promiseError: function(promise_error) {
-          throw promise_error;
+          late_error = true;
+          onError &&
+            onError(
+              '<span style="white-space: pre-line;">' +
+              promise_error.toString() +
+              "\n" +
+              "</span>"
+            );
+          setResult(Result.RUNTIME_ERROR);
+          setLoading(false);
+          setOutput(promise_error.toString() + "\n");
+          onFinish && onFinish();
         },
         write: function(s) {
           setOutput(s);
@@ -170,10 +182,12 @@ export function runCpp({
 
   try {
     runit(code);
-    setResult(Result.ACCEPT);
-    setLoading(false);
-    onSuccess && onSuccess();
-    onFinish && onFinish();
+    if (!late_error) {
+      setResult(Result.ACCEPT);
+      setLoading(false);
+      onSuccess && onSuccess();
+      onFinish && onFinish();
+    }
   } catch (_e) {
     const err = _e as Error;
     onError &&
