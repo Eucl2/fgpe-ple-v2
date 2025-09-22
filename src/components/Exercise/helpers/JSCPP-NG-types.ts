@@ -10,11 +10,11 @@ export interface Stdio {
   isMochaTest?: boolean;
   promiseError: (promise_error: Error) => void;
   drain?: () => string;
-  cinStop: () => void;
-  cinProceed: () => void;
-  cinState: () => boolean;
-  setReadResult: (result: string) => void;
-  getReadResult: () => string;
+  cinStop?: () => void;
+  cinProceed?: () => void;
+  cinState?: () => boolean;
+  setReadResult?: (result: string) => void;
+  getReadResult?: () => string;
   getInput: () => Promise<string>;
   finishCallback: (ExitCode: number) => void;
   write: (s: string) => void;

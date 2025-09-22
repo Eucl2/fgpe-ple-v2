@@ -122,30 +122,33 @@ export function runCpp({
     };
   })();
 
-  function prepareLaunchRuntime(source: string, input: InputFunction | undefined, config: JSCPPConfig, disableStopExecutionFlag: boolean): void {
+  function prepareLaunchRuntime(source: string, input: InputFunction | undefined, config: JSCPPConfig): void {
     errorOccured = false;
 
-    if (disableStopExecutionFlag) {
-      stopExecution.current = false;
-    }
+    stopExecution.current = false;
+
     JSCPP.run(source, input ?? function() { throw new Error("Input is not given") }, config);
   }
-  let late_error: boolean = false;
 
   const runit = function(source: string) {
     const msStart = Date.now();
     const config: JSCPPConfig = {
       fstream,
-      includes: {}, // TODO: fix
+      includes: {},
       loadedLibraries: [],
       stdio: {
         finishCallback: function(exitCode: number) {
           const msEnd = Date.now();
-          setOutput("\nprogram exited with code " + exitCode + "\ndone in " + ((msEnd - msStart) / 1000).toFixed(3) + " s");
+          setOutput("\nprogram exited with code " + exitCode + "\ndone in " + ((msEnd - msStart) / 1000).toFixed(3) + " s\n\n");
           //hideProgress();
+          setResult(Result.ACCEPT);
+          setLoading(false);
+          if (exitCode === 0) {
+              onSuccess && onSuccess();
+          }
+          onFinish && onFinish();
         },
         promiseError: function(promise_error) {
-          late_error = true;
           onError &&
             onError(
               '<span style="white-space: pre-line;">' +
@@ -161,12 +164,7 @@ export function runCpp({
         write: function(s) {
           setOutput(s);
         },
-        cinStop() { },
-        cinProceed() { },
-        cinState() { throw new Error("undefined") },
-        getReadResult() { throw new Error("undefined") },
-        setReadResult() { throw new Error("undefined") },
-        getInput() { throw new Error("undefined") },
+        getInput: getInput ?? function() { stopExecution.current = true; throw new Error("getInput is undefined") },
       },
       stopExecutionCheck: function() {
         return stopExecution.current;
@@ -177,17 +175,11 @@ export function runCpp({
       unsigned_overflow: "error"
     };
 
-    prepareLaunchRuntime(source, getInput, config, true);
+    prepareLaunchRuntime(source, getInput, config);
   }
 
   try {
     runit(code);
-    if (!late_error) {
-      setResult(Result.ACCEPT);
-      setLoading(false);
-      onSuccess && onSuccess();
-      onFinish && onFinish();
-    }
   } catch (_e) {
     const err = _e as Error;
     onError &&

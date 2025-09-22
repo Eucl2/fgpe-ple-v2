@@ -156,15 +156,17 @@ const Exercise = ({
     if (exerciseData) {
       setIsExerciseDataLoading(false);
       // Initialize editor with initcode
-      if (exerciseData.initcode) {
-        setCode(exerciseData.initcode);
+      const lang = activeLanguage;
+      if (lang.id && exerciseData.languageData[lang.id].initcode) {
+        setCode(exerciseData.languageData[lang.id].initcode);
       }
     }
   }, [exerciseData]);
 
   const reloadCode = () => {
-    if (exerciseData) {
-      setCode(exerciseData.initcode);
+    const lang = activeLanguage;
+    if (exerciseData && lang.id && exerciseData.languageData[lang.id] && exerciseData.languageData[lang.id].initcode) {
+      setCode(exerciseData.languageData[lang.id].initcode);
     } else {
       setCode(null);
     }
@@ -174,11 +176,12 @@ const Exercise = ({
 
   const getCodeSkeleton = (dontSetCode?: boolean, getArray?: boolean) => {
     // If we have exercise data from our function, use that instead
-    if (exerciseData && exerciseData.initcode) {
+    const lang = activeLanguage;
+    if (exerciseData && lang.id && exerciseData.languageData[lang.id] && exerciseData.languageData[lang.id].initcode) {
       if (!dontSetCode) {
-        setCode(exerciseData.initcode);
+        setCode(exerciseData.languageData[lang.id].initcode);
       }
-      return exerciseData.initcode;
+      return exerciseData.languageData[lang.id].initcode;
     }
 
     // Fallback to original method
@@ -392,8 +395,17 @@ const Exercise = ({
     setWaitingForEvaluationResult(true);
 
     try {
+      const lang = activeLanguage;
+      if (!lang.id) {
+        throw new Error("Missing programming language ID");
+      }
+      const langData = exerciseData.languageData[lang.id];
+      if (!langData) {
+        throw new Error("Programming language data is undefined");
+      }
+
       //run checksource to verify if solution meets requirements
-      const checksourceResult = await executeCheckSource(code, exerciseData.checksource);
+      const checksourceResult = await executeCheckSource(code, exerciseData.languageData[lang.id].checksource);
 
       if (checksourceResult !== 'OK') {
         setSubmissionFeedback(checksourceResult);
@@ -410,14 +422,14 @@ const Exercise = ({
       }
 
       //run test code
-      const fullCode = `${exerciseData.precode}\n\n${code}\n\n${exerciseData.postcode}\n\n${exerciseData.testcode}`;
+      const fullCode = `${langData.pretestcode}${code}${langData.posttestcode}`;
       additionalOutputs.current = [];
 
       // Use different execution based on language
       console.log("activeLanguage", activeLanguage);
 
       if (activeLanguage.name?.substring(0, 6).toLowerCase() === "python" && isSkulptEnabled) {
-          
+
         try {
           await loadWasmModule();
         } catch (err) {
@@ -517,7 +529,7 @@ const Exercise = ({
             },
           });
         });
-      } else if (activeLanguage.id?.toUpperCase() === "C" || activeLanguage.id?.toUpperCase() === "CPP") {
+      } else if (/*activeLanguage.id?.toUpperCase() === "C" ||*/ activeLanguage.id?.toUpperCase() === "CPP") {
         try {
           await loadWasmModule();
         } catch (err) {
@@ -527,6 +539,7 @@ const Exercise = ({
           setWaitingForEvaluationResult(false);
           return;
         }
+        let pass: boolean = false;
         // JSCPP-NG for C/C++
         let errors: { content: string; index: number }[] = [];
         // fullText : string
@@ -539,7 +552,7 @@ const Exercise = ({
         // additionalOutputs: MutableRefObject<string[]>
         await new Promise((resolve) => {
           runCpp({
-            code: code,
+            code: fullCode,
             setLoading: setWaitingForEvaluationResult,
             setOutput: (v: string) => {
               additionalOutputs.current = [...additionalOutputs.current, v];
@@ -550,11 +563,16 @@ const Exercise = ({
             stopExecution,
             getInput: undefined,
             addFile: () => { throw new Error("addFile: Not yet implemented"); },
-            onFinish: () => { },
+            onFinish: () => {
+              setValidationOutputs(additionalOutputs.current);
+              if (!pass) {
+                setSubmissionResult(Result.WRONG_ANSWER);
+              }
+            },
             onSuccess: () => {
+              pass = true;
               setSubmissionResult(Result.ACCEPT);
               setSubmissionFeedback("All tests passed!");
-              setValidationOutputs(additionalOutputs.current);
 
               try {
                 console.log("Debug - keycloak.profile:", keycloak.profile);
@@ -696,8 +714,16 @@ const Exercise = ({
     additionalOutputs.current = [];
 
     try {
+      const lang = activeLanguage;
+      if (!lang.id) {
+        throw new Error("Missing programming language ID");
+      }
+      const langData = exerciseData.languageData[lang.id];
+      if (!langData) {
+        throw new Error("Programming language data is undefined");
+      }
       // Combine precode, user code, and postcode
-      const fullCode = `${exerciseData.precode}\n\n${code}\n\n${exerciseData.postcode}`;
+      const fullCode = `${langData.precode}${code}${langData.postcode}`;
       console.log("activeLanguage", activeLanguage);
 
       if (activeLanguage.name?.substring(0, 6).toLowerCase() === "python" && isSkulptEnabled) {
@@ -774,7 +800,7 @@ const Exercise = ({
             additionalOutputs.current
           );
         }
-      } else if (activeLanguage.id?.toUpperCase() === "C" || activeLanguage.id?.toUpperCase() === "CPP") {
+      } else if (/*activeLanguage.id?.toUpperCase() === "C" ||*/ activeLanguage.id?.toUpperCase() === "CPP") {
         // JSCPP-NG for C/C++
         let errors: { content: string; index: number }[] = [];
         // fullText : string
@@ -803,14 +829,17 @@ const Exercise = ({
               stopExecution,
               getInput: () => {
                 return new Promise((resolve, reject) => {
-                  const nextInput = testValueSplitted[inputFunN] ?? reject("End of input");
-                  inputFunN++;
-                  resolve(nextInput);
+                  const nextInput = testValueSplitted[inputFunN];
+                  if (nextInput) {
+                    inputFunN++;
+                    resolve(nextInput);
+                  } else {
+                    reject();
+                  }
                 });
               },
               addFile: () => { throw new Error("addFile: Not yet implemented"); },
-              onFinish: () => { },
-              onSuccess: () => {
+              onFinish: () => {
                 setValidationOutputs(additionalOutputs.current);
                 setSubmissionFeedback("");
                 setSubmissionResult(null);
@@ -821,7 +850,8 @@ const Exercise = ({
                   true,
                   additionalOutputs.current
                 );
-
+              },
+              onSuccess: () => {
                 resolve(true);
               },
               onError: (err: string) => {
