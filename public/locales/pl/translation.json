@@ -130,7 +130,8 @@
     "terminal": {
       "waitingForResult": "Czekam na odpowiedź...",
       "feedback": {
-        "Ready": "Gotowy"
+        "Ready": "Gotowy",
+        "languageNotSupported": "Ten język nie jest jeszcze obsługiwany w przeglądarce"
       }
     },
     "menu": {

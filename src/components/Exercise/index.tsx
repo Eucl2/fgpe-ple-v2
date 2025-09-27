@@ -645,7 +645,7 @@ const Exercise = ({
         });
       } else {
         // For non-Python languages or when skulpt is disabled
-        setSubmissionFeedback("This language is not supported for in-browser execution yet");
+        setSubmissionFeedback(t("playground.feedback.languageNotSupported"));
         setSubmissionResult(Result.WRONG_ANSWER);
         setValidationOutputs(null);
       }
@@ -877,7 +877,7 @@ const Exercise = ({
         }
       } else {
         // For non-Python languages or when Skulpt is disabled
-        setSubmissionFeedback("This language is not supported for in-browser execution yet");
+        setSubmissionFeedback(t("playground.feedback.languageNotSupported"));
         setSubmissionResult(Result.WRONG_ANSWER);
         setValidationOutputs(null);
       }

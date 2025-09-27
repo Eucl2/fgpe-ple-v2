@@ -115,7 +115,8 @@
     "terminal": {
       "waitingForResult": "Auf das Ergebnis warten ...",
       "feedback": {
-        "Ready": "Fertig"
+        "Ready": "Fertig",
+        "languageNotSupported": "Diese Sprache wird für die Ausführung im Browser noch nicht unterstützt"
       }
     },
     "menu": {

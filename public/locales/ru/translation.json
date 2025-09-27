@@ -115,7 +115,8 @@
     "terminal": {
       "waitingForResult": "Жду результата ...",
       "feedback": {
-        "Ready": "Готовый"
+        "Ready": "Готовый",
+        "languageNotSupported": "Этот язык пока не поддерживается для выполнения в браузере."
       }
     },
     "menu": {
