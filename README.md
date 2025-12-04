@@ -100,13 +100,11 @@ docker run -itd -p 8088:80 \
 <tr border=0>
 <td border=0>
 
-This software has been developed as a part of the Framework for Gamified Programming Education ([https://fgpe.usz.edu.pl/](https://fgpe.usz.edu.pl/)) and FGPE Plus: Learning tools interoperability for gamified programming education ([https://fgpeplus.usz.edu.pl/](https://fgpeplus.usz.edu.pl/)) projects which were co-funded by the Erasmus+ Programme of the European Union.
-
+This software has been developed as a part of Framework for Gamified Programming Education (https://fgpe.usz.edu.pl/), FGPE Plus: Learning tools interoperability for gamified programming education (https://fgpeplus.usz.edu.pl/) and FGPE++ Gamified Programming Learning at Scale (https://fgpeplus2.usz.edu.pl/) projects which were co-funded by the European Union.
 </td>
 <td border=0>
 
-![Framework for Gamified Programming Education project](https://raw.githubusercontent.com/FGPE-Erasmus/fgpe-ple-v2/master/docs/logo_FGPE.jpeg) ![Erasmus+](https://raw.githubusercontent.com/FGPE-Erasmus/fgpe-ple-v2/master/docs/logo_erasmus.jpeg)
-
+![Framework for Gamified Programming Education project](https://raw.githubusercontent.com/FGPE-Erasmus/fgpe-ple-v2/master/docs/logo_FGPE.jpeg) ![Erasmus+](https://raw.githubusercontent.com/FGPE-Erasmus/lightweight-fgpe-server/master/logo_erasmus.jpg)
 </td>
 </tr>
 </table>
